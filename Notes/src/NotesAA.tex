@@ -19,6 +19,7 @@
 \allowdisplaybreaks
 
 \renewcommand{\headrulewidth}{0pt}
+\setlist[enumerate,1]{label={\roman*)}}
 
 % Cover page title
 \title{Advanced Algorithms - Notes}
@@ -80,5 +81,57 @@
 
 % Start of content
 \newpage
+
+\setcounter{section}{-1}
+
+\section{Reference}
+
+\subsection{Probability}
+
+\definition{Sample Space}
+A \textit{Sample Space} is the set of possible outcomes of a scenario. A \textit{Sample Space} is not necessarily finite.\\
+\eg Rolling a dice $S:=\{1,2,3,4,5,6\}$.\\
+
+\definition{Probability Measure, $\prob$}
+\textit{Probability Measure}, $\prob$, is a function from the sample space to $[0,1]$ which fulfils ${\displaystyle\sum_{x\in S}\prob(x)=1}$.\\
+$$\prob:S\to[0,1]$$
+A \textit{Probabiltiy Measure} must fulfil the criteria that for disjoint events $\{A_1,\dots,A_n\}$
+$$\prob\left(\bigcup_iA_i\right)=\sum_i\prob(A_i)$$
+
+\definition{Event}
+An \textit{Event} is a subset of the \textit{Sample Space}.\\
+The probability of an \textit{Event}, $A$, happening is
+$$\prob(A)=\sum_{x\in A}\prob(x)$$
+
+\definition{Sigma Field, $\mathcal{F}$}
+A \textit{Sigma Field} is the set of possible events in a given scenario.\\
+A \textit{Sigma Field} must fulfil the following criteria
+\begin{enumerate}
+	\item $S\in\mathcal{F}$.
+	\item $\forall\ A\in\mathcal{F}\implies A^c\in\mathcal{F}$.
+	\item $\forall\ A_1,\dots,A_n\in\mathcal{F}\implies\bigcup_{i}A_i\in\mathcal{F}$.
+\end{enumerate}
+
+\definition{Random Variable}
+A \textit{Random Variable} is a function from the sample space, $S$, to the real numbers, $\reals$.\\
+$$X:S\to\reals$$
+The probability of a \textit{Random Variable}, $X$, taking a specific value $x$ is found by
+$$\prob(X=x)=\sum_{\{a\in S:X(a)=x\}}\prob(a)$$
+
+\definition{Indicator Random Variable}
+An \textit{Indicator Random Variable} is a \textit{Random Variable} which only ever takes $0$ or $1$ and is used to indicate whether a particular event has happened (1), or not (0).
+$$\expect(I)=\prob(I=1)$$
+
+\definition{Expected Value, $\expect$}
+The \textit{Expected Value} of a \textit{Random Variable} is the mean value of said \textit{Random Variable}
+$$\expect(X):=\sum_x x\prob(X=x)$$
+
+\theorem{Linearity of Expected Value}
+Let $X_1,\dots,X_n$ be random variables. Then
+$$\expect\left(\sum_{i=1}^nX_i\right)=\sum_{i=1}^n\expect(X_i)$$
+
+\theorem{Markov's Inequality}
+Let $X$ be a non-negative random variable. Then
+$$\prob(X\geq a)\leq\frac1a\expect(X)\quad\forall\ a>0$$
 
 \end{document}
