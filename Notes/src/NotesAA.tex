@@ -12,6 +12,20 @@
 \usepackage{tikz}
 \usepackage{changepage} 
 
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    frameround=fttt,
+    language=Prolog,
+    numbers=left,
+    breaklines=true,
+    keywordstyle=\color{blue}\bfseries, 
+    basicstyle=\ttfamily\color{red},
+    numberstyle=\color{black}
+    }
+
 \begin{document}
 
 \pagestyle{fancy}
@@ -33,13 +47,13 @@
 \fancyhead[R]{\today}
 
 % Counters
-\newcounter{definition}[subsection]
-\newcounter{example}[subsection]
-\newcounter{notation}[subsection]
-\newcounter{proposition}[subsection]
-\newcounter{proof}[subsection]
-\newcounter{remark}[subsection]
-\newcounter{theorem}[subsection]
+\newcounter{definition}[section]
+\newcounter{example}[section]
+\newcounter{notation}[section]
+\newcounter{proposition}[section]
+\newcounter{proof}[section]
+\newcounter{remark}[section]
+\newcounter{theorem}[section]
 
 % commands
 \newcommand{\dotprod}[0]{\boldsymbol{\cdot}}
@@ -61,62 +75,216 @@
 \newcommand{\x}[0]{\textbf{x}}
 \newcommand{\iid}[0]{\overset{\text{iid}}{\sim}}
 \newcommand{\proved}[0]{$\hfill\square$\\}
+\newcommand{\Mod}[1]{\ \mathrm{mod}\ #1}
 
-\newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{subsection}.\arabic{definition}\ - }\textit{#1}\\}
-\newcommand{\definitionn}[1]{\stepcounter{definition} \textbf{Definition \arabic{subsection}.\arabic{definition}\ - }\textit{#1}}
-\newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{subsection}.\arabic{proof}\ - }\textit{#1}\\}
-\newcommand{\prooff}[1]{\stepcounter{proof} \textbf{Proof \arabic{subsection}.\arabic{proof}\ - }\textit{#1}}
-\newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{subsection}.\arabic{example}\ - }\textit{#1}\\}
-\newcommand{\examplee}[1]{\stepcounter{example} \textbf{Example \arabic{subsection}.\arabic{example}\ - }\textit{#1}}
-\newcommand{\notation}[1]{\stepcounter{notation} \textbf{Notation \arabic{subsection}.\arabic{notation}\ - }\textit{#1}\\}
-\newcommand{\notationn}[1]{\stepcounter{notation} \textbf{Notation \arabic{subsection}.\arabic{notation}\ - }\textit{#1}}
-\newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}\\}
-\newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}}
-\newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{subsection}.\arabic{remark}\ - }\textit{#1}\\}
-\newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{subsection}.\arabic{remark}\ - }\textit{#1}}
-\newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{subsection}.\arabic{theorem}\ - }\textit{#1}\\}
-\newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{subsection}.\arabic{theorem}\ - }\textit{#1}}
+\newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}\\}
+\newcommand{\definitionn}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}}
+\newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}\\}
+\newcommand{\prooff}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}}
+\newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}\\}
+\newcommand{\examplee}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}}
+\newcommand{\notation}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}\\}
+\newcommand{\notationn}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}}
+\newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}\\}
+\newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}}
+\newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}\\}
+\newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}}
+\newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
+\newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}}
 
 \tableofcontents
 
 % Start of content
 \newpage
 
-\setcounter{section}{-1}
+\section{Hashing}
 
+\definition{Dictionary}
+A \textit{Dictionary} is an abstract data structure which stores $(\textit{key},\textit{value})$ pairs, with \textit{key} being unique.\\
+A \textit{Dictionary} can perform the following operations
+\begin{center}
+\begin{tabular}{l|l}
+\textbf{Operation}&\textbf{Description}\\\hline
+\lstinline!add(k,v)!&Add the pair \lstinline!(k,v)!.\\
+\lstinline!lookup(k)!&Return \lstinline!v! if \lstinline!(k,v)! is in dictionary, \lstinline!NULL! otherwise.\\
+\lstinline!delete(k)!&Remove pair \lstinline!(k,v)!, assuming \lstinline!(k,v)! is in dictionary.
+\end{tabular}
+\end{center}
+
+\proposition{Implementing a Dictionary}
+Many data structures can be used to implement a \textit{Dictionary}. These include, but not limited to:
+\begin{enumerate}
+	\item Linked lists.
+	\item Binary Search, (2,3,4) \& Red-Black Trees.
+	\item Skip lists
+	\item van Emde Boas Trees.
+\end{enumerate}
+
+\remark{Motivation for Hashing}
+None of the implementations of a \textit{Dictionary} suggested in \textbf{Proposition 1.1} achieves a $O(1)$ run-time complexity in the worst case for \underline{all} operations. To achieve this we introduce \textit{Hashing}.\\
+
+\definition{Hash Function}
+A \textit{Hash Function} takes in object's key and returns a value which is used to index the object in a \textit{Hash Table}.\\
+Let $S$ be the set of all possible keys a hash function can recieve \& $m$ be the number of indexes in its \textit{Associated Hash Table}. Then
+$$h:S\to[m]$$
+\nb We want to avoid cases where $h(x)=h(y)$ for $x\neq y$(\textit{collisions}) .\\
+
+\remark{Avoiding Collisions in Hashing}
+When indexing $n$ items to $m$ indicies using a \textit{Hash Function} we only avoid \textit{Collisions} if $m\gg n$.\\
+
+\definition{Hash Table}
+A \textit{Hash Table} is an abstract data structre which extends the \textit{Dictionary} in such a way that time complexity is reduced.\\
+A \textit{Hash Table} is comprise of an array \& a \textit{Hash Function}. The \textit{Hash Function} maps an object's key to an index in the array. If multiple objects have the same \textit{Hash Value} then a \textit{Linked List} is used in that index, with new objects added to the end of the \textit{Linked List} (Called \textit{Chaining}).\\
+
+\proposition{Time Complexity for Dictionary Operations in a Hash Table}
+By building a \textit{Hash Table} with \textit{Chaining} we achieve the following time complexities for \textit{Dictionary} operations
+\begin{center}
+\begin{tabular}{l|l|l}
+\textbf{Operation}&\textbf{Worst Case Time Complexity}&Comments\\\hline
+\lstinline!add(k,v)!&$O(1)$&Add item to the end of \textit{Linked List} if necessary.\\
+\lstinline!lookup(k)!&$O($length of chain containing \lstinline!k!$)$&We might have to search through the whole\\&&\textit{Linked List} containing \lstinline!k!.\\
+\lstinline!delete(k)!&$O($length of chain containing \lstinline!k!$)$&Only $O(1)$ to perform the actual deletion,\\
+&&but need to find \lstinline!k! first.
+\end{tabular}
+\end{center}
+
+\theorem{True Randomness}
+Consider $n$ fixed inputs for a \textit{Hash Table} with $m$ indices. (\ie any sequence of $n$ add/lookup/delete operations).\\
+Pick a \textit{Hash Function}, $h$, at random from a set of all \textit{Hash Functions}, $H:=\{h:S\to[m])$. Then
+$$\expect(\text{Run-Time per Operation})=O\left(1+\frac{n}{m}\right)$$
+\nb The expected run-time per operation is $O(1)$ if $m\gg n$.\\
+
+\proof{Theorem 1.1}
+Let $x\ \&\ y\in S$ be two distincy keys \& $T$ be a \textit{Hash Table} with $m$ indexes.\\
+Define $I_{x,y}\begin{cases}1&h(x)=h(y)\\0&\text{otherwise}\end{cases}$.\\
+We have $\prob(h(x)=h(y))=\frac{1}{m}$.\\
+Therefore
+\[\begin{array}{rcl}
+\expect(I_{x,y})&=&\prob(I_{x,y}=1)\\
+&=&\prob(h(x)=h(y))\\
+&=&\frac{1}{m}
+\end{array}\]
+Let $N_x$ be the number of keys stored in $H$ that are hashed to $h(x)$.\\
+Note that $N_x=\displaystyle\sum_{k\in T}I_{x,k}$.\\
+Now we have that
+$$\expect(N_x)=\expect\left(\displaystyle\sum_{k\in T}I_{x,k}\right)=\sum_{k\in H}\expect(I_{x,k})=n\frac{1}{m}=\frac{n}{m}$$
+\proved
+
+\remark{Why not hash to unique values}
+Suppose we want to define a \textit{Hash Function} which maps each key in $S$ to a unique position in the \textit{Hash Table}, $T$. This requires $m$ unique positions, which in turn require $\log_2 m$ bits for each key. This is an unreasonably large amount of space.\\
+
+\proposition{Specifying the Hash Function}
+Consider a set of \textit{Hash Functions}, $H:=\{h_1,h_2,\dots\}$.\\
+When we initialise a \textit{Hash Table} we choose a hash function $h\in H$ at random and then proceed only to use $h$ when dealing with this specific \textit{Hash Table}.\\
+
+\remark{Randomness in Hashing}
+All the randomness in \textit{Hashing} comes from how we choose the \textit{Hash Function} \& not from how the \textit{Hash Function} itself runs.\\
+
+\definition{Weakly Universal Set of Hashing Functions}
+Let $H:=\{h|h:S\to[m]\}$ be a set of \textit{Hashing Functions}.\\
+$H$ is \textit{Weakly Universal} if for any $x,y\in S$ with $x\neq y$
+$$\prob(h(x)=h(y))\leq\frac{1}{m}$$
+when $h$ is chosen uniformly at random from $H$.\\
+
+\theorem{Expected Run time for Weakly Universal Set}
+Consider $n$ fixeds to a \textit{Hash Table}, $T$, with $m$ indexes.\\
+Pick a \textit{Hash Function}, $H$, from a \textit{Weakly Universal Set} of \textit{Hash Functions}, $H$.
+$$\expect(\text{Run-Time per Operation})=O(1)\text{ for }m\geq n$$
+\nb Proof is same as for \textit{True Randomness}.\\
+
+\proposition{Constructing a Weakly Universal Set of Hash Functions}
+Let $S:=[s]$ be the set of possible keys \& $p$ be some prime greater than $s$\footnote{There is a theorem that $\forall\ n\ \exists\ p\in[n,2n]$ st $p$ is prime.}.\\
+Choose some $a,b\in[0,p-1]$ \& define
+\[\begin{array}{rcl}
+h_{a,b}(x)&=&\underbrace{[\ (ax+b)\Mod p\ ]}_\text{spread values over [0,p-1]}\underbrace{\Mod m}_\text{causes collisions}\\
+H_{p,m}&=&\{h_{a,b}(\cdot):a\in[1,p-1],\ b\in[0,p-1]
+\end{array}\]
+\nb $H_{p,m}$ is a \textit{Weakly Universal Set} of \textit{Hashing Functions}.\\
+\nb Different values of $a\ \&\ b$ perform differently for different data sets.\\
+
+\remarkk{True Randomness vs Weakly Universal Hashing}
+\begin{itemize}
+	\item[-] For both \textit{True Randomness} \& \textit{Weakly Universal Hashing} we have that when $m\geq n$ the expected lookup time in the \textit{Hash Table} is $O(1)$.
+	\item[-] Constructing a \textit{Weakly Universal Set} of \textit{Hash Functions} is generally easier.
+\end{itemize}
+
+\theorem{Longest Chain - True Randomness}
+If \textit{Hashing Function} $h$ is selected uniformly at random from all \textit{Hashing Functions} to $m$ indicies.\\
+Then, over $m$ inputs we have
+$$\prob(\exists\text{ a chain length}\geq3\ln m)\leq\frac1m$$
+
+\proof{Theorem 1.3}
+This problem is equivalent to showing that if we randomly throw $m$ balls into $m$ bins the probabiltiy of having a bin with at least $3\ln m$ balls is at most $\frac1m$.\\
+Let $X_1$ be the number of valls in the first bin.\\
+Choose any $k$ of the $M$ balls, the probabiltiy that all of these $K$ balls go into the first bin is $\frac1{m^k}$.\\
+By the \textit{Union Bound Theorem} we have
+$$\prob(X_1\geq k)\leq{m\choose k}\frac{1}{m^k}\leq1{k!}$$
+Applying the \textit{Union Bound Theorem} again we have
+$$\prob(\text{at least 1 bin recieves at least }k\text{ balls})\leq m\prob(X_1\geq k)\leq\frac{m}{k!}$$
+Setting $k=3\ln m$ we observe that
+$$\frac{m}{k!}\leq\frac1m\text{ for }m\geq2$$
+\proved
+
+\theorem{Longest Chain - Weakly Universal Hashing}
+Let \textit{Hashing Function} $h$ be picked uniformly at random from a \textit{Weakly Universal Set} of \textit{Hashing Functions}.\\
+Then, over $m$ inputs
+$$\prob(\exists\text{ a chain length}\geq1+\sqrt{2m})\leq\frac12$$
+\nb This is a poor bound.\\
+
+\proof{Theorem 1.4}
+Let $x,y\in S$ be two keys and define $I_{x,y}\begin{cases}1&h(x)=h(y)\\0&\text{otherwise}\end{cases}$.\\
+Let $C$ be a random variable for the total number of collision (\ie $C=\sum_{x,y\in H, \x<y}I_{x,y}$).\\
+Using \textit{Linearity of Expectation} and that $\expect(I_{x,y})=\frac1m$ when $h$ is \textit{Weakly Universal}
+$$\expect(C)=\expect\left(\sum_{x,y\in H,\ x<y}I_{x,y}\right)=sum_{x,y\in H,\ x<y}\expect(I_{x,y})={m\choose2}\frac1m\leq\frac{m}{2}$$
+By \textit{Markov's Inequality}
+$$\prob(C\geq m)\leq\frac{\expect(C)}m\leq\frac12$$
+Let $L$ be a random variable for the length of the longest chain in $H$.\\
+Then, $C\leq{L\choose2}$.
+Now
+$$\prob\left(\frac{(L-1)^2}{2}\geq m\right)\leq\prob\left({L\choose2}\geq m\right)\leq\prob(C\geq m)\leq\frac12$$
+By rearranging, we have that
+$$\prob(L\geq1+\sqrt{2m})\leq\frac12$$
+
+\newpage
+\setcounter{section}{-1}
 \section{Reference}
 
 \subsection{Probability}
 
-\definition{Sample Space}
+\definition{Sample Space, $\Omega$}
 A \textit{Sample Space} is the set of possible outcomes of a scenario. A \textit{Sample Space} is not necessarily finite.\\
-\eg Rolling a dice $S:=\{1,2,3,4,5,6\}$.\\
-
-\definition{Probability Measure, $\prob$}
-\textit{Probability Measure}, $\prob$, is a function from the sample space to $[0,1]$ which fulfils ${\displaystyle\sum_{x\in S}\prob(x)=1}$.\\
-$$\prob:S\to[0,1]$$
-A \textit{Probabiltiy Measure} must fulfil the criteria that for disjoint events $\{A_1,\dots,A_n\}$
-$$\prob\left(\bigcup_iA_i\right)=\sum_i\prob(A_i)$$
+\eg Rolling a dice $\Omega:=\{1,2,3,4,5,6\}$.\\
 
 \definition{Event}
 An \textit{Event} is a subset of the \textit{Sample Space}.\\
 The probability of an \textit{Event}, $A$, happening is
 $$\prob(A)=\sum_{x\in A}\prob(x)$$
 
-\definition{Sigma Field, $\mathcal{F}$}
+\definition{Disjoint Events}
+Let $A_1\ \&\ A_2$ be events.\\
+$A_1\ \&\ A_2$ are said to be \textit{Disjoint} if $A_1\cap A_2=\emptyset$.\\
+
+\definition{$\sigma$-Field, $\mathcal{F}$}
 A \textit{Sigma Field} is the set of possible events in a given scenario.\\
 A \textit{Sigma Field} must fulfil the following criteria
 \begin{enumerate}
-	\item $S\in\mathcal{F}$.
+	\item $\emptyset,\Omega\in\mathcal{F}$.
 	\item $\forall\ A\in\mathcal{F}\implies A^c\in\mathcal{F}$.
-	\item $\forall\ A_1,\dots,A_n\in\mathcal{F}\implies\bigcup_{i}A_i\in\mathcal{F}$.
+	\item $\forall\ \{A_1,\dots,A_n\}\subseteq\mathcal{F}\implies\bigcup\limits_{i=1}^nA_i\in\mathcal{F}$.
+\end{enumerate}
+
+\definition{Probability Measure, $\prob$}
+A \textit{Probability Measure} maps a \textit{$\sigma$-Field} to $[0,1]$ which satisfies
+\begin{enumerate}
+	\item $\prob(\emptyset)=0$ \&\ $\prob(S)=1$; and,
+	\item If $\{A_1,\dots,A_n\}\subseteq\mathcal{F}$ are pair-wise disjoint then $\prob\left(\bigcup\limits_{i=1}^nA_i\right)=\sum_{i=1}^n\prob(A_i)$. [$\sigma$-Additivity]
 \end{enumerate}
 
 \definition{Random Variable}
 A \textit{Random Variable} is a function from the sample space, $S$, to the real numbers, $\reals$.\\
 $$X:S\to\reals$$
 The probability of a \textit{Random Variable}, $X$, taking a specific value $x$ is found by
-$$\prob(X=x)=\sum_{\{a\in S:X(a)=x\}}\prob(a)$$
+$$\prob(X=x)=\sum_{\{a\in \Omega:X(a)=x\}}\prob(a)$$
 
 \definition{Indicator Random Variable}
 An \textit{Indicator Random Variable} is a \textit{Random Variable} which only ever takes $0$ or $1$ and is used to indicate whether a particular event has happened (1), or not (0).
@@ -133,5 +301,25 @@ $$\expect\left(\sum_{i=1}^nX_i\right)=\sum_{i=1}^n\expect(X_i)$$
 \theorem{Markov's Inequality}
 Let $X$ be a non-negative random variable. Then
 $$\prob(X\geq a)\leq\frac1a\expect(X)\quad\forall\ a>0$$
+
+\theorem{Union Bound}
+Let $A_1,\dots,A_n$ be \textit{Events}. Then
+$$\prob\left(\bigcup\limits_{i=1}^nA_i)\right)\leq\sum_{i=1}^n\prob(A_i)$$
+\nb This in an equality if the events are disjoint.\\
+
+\proof{Union Bound}
+Define \textit{Indicator RV} $I_i$ st
+$$I_i:=\begin{cases}1&A_i\text{ happened}\\0&\text{otherwise}\end{cases}$$
+Define \textit{Random Variable} $X:=\sum_{i=1}^nI_i$ (the number of events that happened).\\
+Then
+\[\begin{array}{rcl}
+\prob\left(\bigcup\limits_{i=1}^nA_i)\right)&=&\prob(X>0)\\
+&\leq&\expect(X)\text{ by Markov's Inequality}\\
+&=&\expect\left[\displaystyle\sum_{i=1}^nI_i\right]\\
+&=&\displaystyle\sum_{i=1}^n\expect[I_i]\\
+&=&\displaystyle\sum_{i=1}^n\prob(I_i=1)\\
+&=&\displaystyle\sum_{i=1}^n\prob(A_i1)
+\end{array}\]
+\proved
 
 \end{document}
