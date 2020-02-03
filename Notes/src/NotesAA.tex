@@ -1,6 +1,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[margin=1in, paperwidth=8.3in, paperheight=11.7in]{geometry}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -101,13 +102,20 @@
 
 \definition{Dictionary}
 A \textit{Dictionary} is an abstract data structure which stores $(\textit{key},\textit{value})$ pairs, with \textit{key} being unique.\\
-A \textit{Dictionary} can perform the following operations
+A \textit{Dynamic Dictionary} can perform the following operations
 \begin{center}
 \begin{tabular}{l|l}
 \textbf{Operation}&\textbf{Description}\\\hline
 \lstinline!add(k,v)!&Add the pair \lstinline!(k,v)!.\\
 \lstinline!lookup(k)!&Return \lstinline!v! if \lstinline!(k,v)! is in dictionary, \lstinline!NULL! otherwise.\\
 \lstinline!delete(k)!&Remove pair \lstinline!(k,v)!, assuming \lstinline!(k,v)! is in dictionary.
+\end{tabular}
+\end{center}
+A \textit{Static Dictionary} can only perform lookups
+\begin{center}
+\begin{tabular}{l|l}
+\textbf{Operation}&\textbf{Description}\\\hline
+\lstinline!lookup(k)!&Return \lstinline!v! if \lstinline!(k,v)! is in dictionary, \lstinline!NULL! otherwise.
 \end{tabular}
 \end{center}
 
@@ -129,6 +137,8 @@ Let $S$ be the set of all possible keys a hash function can recieve \& $m$ be th
 $$h:S\to[m]$$
 \nb We want to avoid cases where $h(x)=h(y)$ for $x\neq y$(\textit{collisions}) .\\
 
+\remark{Hashing functions assign items to indices with a geometric distribution}
+
 \remark{Avoiding Collisions in Hashing}
 When indexing $n$ items to $m$ indicies using a \textit{Hash Function} we only avoid \textit{Collisions} if $m\gg n$.\\
 
@@ -149,7 +159,7 @@ By building a \textit{Hash Table} with \textit{Chaining} we achieve the followin
 \end{center}
 
 \theorem{True Randomness}
-Consider $n$ fixed inputs for a \textit{Hash Table} with $m$ indices. (\ie any sequence of $n$ add/lookup/delete operations).\\
+Consider $n$ fixed inputs for a \textit{Hash Table} with $m$ indices. (\ie any sequence of $n$ \lstinline!add!/\lstinline!lookup!/\lstinline!delete! operations).\\
 Pick a \textit{Hash Function}, $h$, at random from a set of all \textit{Hash Functions}, $H:=\{h:S\to[m])$. Then
 $$\expect(\text{Run-Time per Operation})=O\left(1+\frac{n}{m}\right)$$
 \nb The expected run-time per operation is $O(1)$ if $m\gg n$.\\
@@ -182,8 +192,8 @@ All the randomness in \textit{Hashing} comes from how we choose the \textit{Hash
 
 \definition{Weakly Universal Set of Hashing Functions}
 Let $H:=\{h|h:S\to[m]\}$ be a set of \textit{Hashing Functions}.\\
-$H$ is \textit{Weakly Universal} if for any $x,y\in S$ with $x\neq y$
-$$\prob(h(x)=h(y))\leq\frac{1}{m}$$
+$H$ is \textit{Weakly Universal} if for any chosen $x,y\in S$ with $x\neq y$
+$$\prob(h(x)=h(y))\leq\frac{1}{m}\text{ when varying }h(\cdot)$$
 when $h$ is chosen uniformly at random from $H$.\\
 
 \theorem{Expected Run time for Weakly Universal Set}
@@ -204,24 +214,33 @@ H_{p,m}&=&\{h_{a,b}(\cdot):a\in[1,p-1],\ b\in[0,p-1]
 
 \remarkk{True Randomness vs Weakly Universal Hashing}
 \begin{itemize}
-	\item[-] For both \textit{True Randomness} \& \textit{Weakly Universal Hashing} we have that when $m\geq n$ the expected lookup time in the \textit{Hash Table} is $O(1)$.
+	\item[-] For both \textit{True Randomness} \& \textit{Weakly Universal Hashing} we have that when $m\geq n$ the expected \lstinline!lookup! time in the \textit{Hash Table} is $O(1)$.
 	\item[-] Constructing a \textit{Weakly Universal Set} of \textit{Hash Functions} is generally easier.
 \end{itemize}
 
 \theorem{Longest Chain - True Randomness}
 If \textit{Hashing Function} $h$ is selected uniformly at random from all \textit{Hashing Functions} to $m$ indicies.\\
 Then, over $m$ inputs we have
-$$\prob(\exists\text{ a chain length}\geq3\ln m)\leq\frac1m$$
+$$\prob(\exists\text{ a chain length}\geq3\log_2 m)\leq\frac1m$$
 
 \proof{Theorem 1.3}
-This problem is equivalent to showing that if we randomly throw $m$ balls into $m$ bins the probabiltiy of having a bin with at least $3\ln m$ balls is at most $\frac1m$.\\
+This problem is equivalent to showing that if we randomly throw $m$ balls into $m$ bins the probabiltiy of having a bin with at least $3\log_2 m$ balls is at most $\frac1m$.\\
 Let $X_1$ be the number of valls in the first bin.\\
 Choose any $k$ of the $M$ balls, the probabiltiy that all of these $K$ balls go into the first bin is $\frac1{m^k}$.\\
 By the \textit{Union Bound Theorem} we have
 $$\prob(X_1\geq k)\leq{m\choose k}\frac{1}{m^k}\leq1{k!}$$
 Applying the \textit{Union Bound Theorem} again we have
 $$\prob(\text{at least 1 bin recieves at least }k\text{ balls})\leq m\prob(X_1\geq k)\leq\frac{m}{k!}$$
-Setting $k=3\ln m$ we observe that
+Observe that
+\[\begin{array}{rcl}
+k!&>&2^{k-1}\\
+\text{Let }k&=&3\log_2 m\\
+\implies k!&>&2^{(3\log_2m-1)}\\
+&\geq&2^{2\log_2 m}\\
+&\geq&(2^{\log_2 m})^2\\
+&=&m^2
+\end{array}\]
+Thus, setting $k=3\log_2 m$ means
 $$\frac{m}{k!}\leq\frac1m\text{ for }m\geq2$$
 \proved
 
@@ -235,7 +254,7 @@ $$\prob(\exists\text{ a chain length}\geq1+\sqrt{2m})\leq\frac12$$
 Let $x,y\in S$ be two keys and define $I_{x,y}\begin{cases}1&h(x)=h(y)\\0&\text{otherwise}\end{cases}$.\\
 Let $C$ be a random variable for the total number of collision (\ie $C=\sum_{x,y\in H, \x<y}I_{x,y}$).\\
 Using \textit{Linearity of Expectation} and that $\expect(I_{x,y})=\frac1m$ when $h$ is \textit{Weakly Universal}
-$$\expect(C)=\expect\left(\sum_{x,y\in H,\ x<y}I_{x,y}\right)=sum_{x,y\in H,\ x<y}\expect(I_{x,y})={m\choose2}\frac1m\leq\frac{m}{2}$$
+$$\expect(C)=\expect\left(\sum_{x,y\in H,\ x<y}I_{x,y}\right)=\sum_{x,y\in H,\ x<y}\expect(I_{x,y})={m\choose2}\frac1m\leq\frac{m}{2}$$
 By \textit{Markov's Inequality}
 $$\prob(C\geq m)\leq\frac{\expect(C)}m\leq\frac12$$
 Let $L$ be a random variable for the length of the longest chain in $H$.\\
@@ -244,6 +263,79 @@ Now
 $$\prob\left(\frac{(L-1)^2}{2}\geq m\right)\leq\prob\left({L\choose2}\geq m\right)\leq\prob(C\geq m)\leq\frac12$$
 By rearranging, we have that
 $$\prob(L\geq1+\sqrt{2m})\leq\frac12$$
+
+\subsection{Perfect Hashing}
+
+\remark{Motivation}
+The \textit{Hashing Schemes} discussed in the previous part perform well in the best \& average cases but not necessarily in the worst cases (as they can have really long longest chains).\\
+
+\definition{Static Perfect Hashing}
+A \textit{Perfect Static Hashing Scheme} maps values to a \textit{Hash Table} is such a way that \lstinline!lookup!s can be done in constant time, even in the worst case.\\
+\nb \textit{FKS Hashing Scheme} is a \textit{Perfect Static Hashing Scheme}.\\
+
+\definition{FKS Hashing Scheme}
+Below is an algorithm for the \textit{FKS Hashing Scheme}\\
+\begin{algorithm}[H]
+\SetKwInOut{Require}{require}
+\caption{FKS Hashing Scheme}
+\Require{$n \{\text{\# insertions}\}, T \{\text{Table with $n$ entries}\}$}
+Insert all $n$ into $T$ using $h$\\
+\While{Collisions in $T\geq n$}{
+	Rebuild $T$ using a new $h$.
+}
+Let $n_i=|T[i]|$.\\
+\For{$i\in[1,n]$}{
+	Insert items of $T[i]$ into new table $T_i$ of size $n_i^2$ using $h_i$.\\
+	\While{Collisions in $T_i\geq 1$}{
+		Rebuild $T_i$ using a new $h_i$.
+	}
+}
+\Return{T}
+\end{algorithm}
+\nb $\prob(\text{Collisions in }T_i\geq1)\leq\frac12$ and \nb $\prob(\text{Collisions in }T\geq n)\leq\frac12$ so we expect to have to build each table twice.\\
+
+\proposition{FKS Hashing Scheme - \lstinline!lookup!}
+Below is an algorithm for \lstinline!lookup(x)! in the \textit{Hash Tables} produced by the \textit{FKS Hashing Scheme}
+\begin{algorithm}[H]
+\caption{FKS - \lstinline!lookup(x)!}
+\SetKwInOut{Require}{require}
+\Require{$T\ \{\text{main table}\}, \{T_1,\dots,T_m\}\ \{\text{sub-tables}\},x\ \{\text{key}\}$}
+Compute $i=h(x)$.\\
+Compute $j=h_i(x)$.\\
+\Return{$T_i[j]$}
+\end{algorithm}
+\nb This runs in $O(1)$ time.\\
+
+\proof{FKS Hashing Scheme - Space Requirements}
+In the \textit{FKS Hashing Scheme} the main table $T$ requires space $O(n)$ and each sub-table $T_i$ requires space $O(n_i^2)$, where $n_i=|T[i]|$.\\
+Storing each task function, $h_i$ requires space $O(1)$.\\
+Thus the total space used is1
+$$O(n)+\sum_iO(n_i^2)=O(n)+O\left(\sum_in_i^2\right)$$
+We know there are ${n_i\choose 2}$ collisions in $T[i]$ so there are $\sum_i{n_i\choose 2}$ collisions in $T$.\\
+We know there are at most $n$ collisions in $T$ so
+$$\sum_i\frac{n_i^2}{4}\leq\sum_i{n_i\choose2}<n\implies\sum_in_i^2<4n$$
+Thus
+$$O(n)+O\left(\sum_in_i^2\right)=O(n)$$
+
+\proof{FKS Hashing Scheme - Expected Construction Time}
+The expected construction time for the main table, $T$, is $O(n)$.\\
+The expected construction time for reach sub-table, $T_i$, is $O(n_i^2)$ where $n_i:=|T[i]|$.\\
+Thus
+\[\begin{array}{rcl}
+expect(\text{construction time})&=&{\displaystyle\expect\left(\text{construction time of }T+\sum_i\text{construction time of }T_i\right)}\\
+&=&\expect\text{construction time of }T)+{\displaystyle\expect\left(\sum_i\text{construction time of }T_i\right)}\\
+&=&O(n)+{\displaystyle\sum_iO(n_i^2)}\\
+&=&O(n)+{\displaystyle O\left(\sum_in_i^2\right)}\text{ see Proof 1.4}\\
+&=&O(n)
+\end{array}\]
+
+\propositionn{FKS Hashing Scheme - Properties}
+\begin{itemize}
+	\item[-] Has no collisions.
+	\item[-] \lstinline!lookup! takes $O(1)$ time in worst-case.
+	\item[-] Uses $O(n)$ space.
+	\item[-] Can be build in $O(n)$ expected time.
+\end{itemize}
 
 \newpage
 \setcounter{section}{-1}
