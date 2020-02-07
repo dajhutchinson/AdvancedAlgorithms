@@ -111,7 +111,7 @@ A \textit{Dynamic Dictionary} can perform the following operations
 \lstinline!delete(k)!&Remove pair \lstinline!(k,v)!, assuming \lstinline!(k,v)! is in dictionary.
 \end{tabular}
 \end{center}
-A \textit{Static Dictionary} can only perform lookups
+A \textit{Static Dictionary} can only perform lookups, after it has been built.
 \begin{center}
 \begin{tabular}{l|l}
 \textbf{Operation}&\textbf{Description}\\\hline
@@ -120,7 +120,8 @@ A \textit{Static Dictionary} can only perform lookups
 \end{center}
 
 \proposition{Implementing a Dictionary}
-Many data structures can be used to implement a \textit{Dictionary}. These include, but not limited to:
+Many data structures can be used to implement a \textit{Dictionary}.\\
+These include, but not limited to:
 \begin{enumerate}
 	\item Linked lists.
 	\item Binary Search, (2,3,4) \& Red-Black Trees.
@@ -270,7 +271,7 @@ $$\prob(L\geq1+\sqrt{2m})\leq\frac12$$
 The \textit{Hashing Schemes} discussed in the previous part perform well in the best \& average cases but not necessarily in the worst cases (as they can have really long longest chains).\\
 
 \definition{Static Perfect Hashing}
-A \textit{Perfect Static Hashing Scheme} maps values to a \textit{Hash Table} is such a way that \lstinline!lookup!s can be done in constant time, even in the worst case.\\
+A \textit{Perfect Static Hashing Scheme} is a scheme that produces a \textit{Hash Table} where  \lstinline!lookup! has time complexity $\in O(1)$, even in the worst case. However this \textit{Hash Table} is static so we cannot perform \lstinline!insert! or \lstinline!delete! after the table has been produced.\\
 \nb \textit{FKS Hashing Scheme} is a \textit{Perfect Static Hashing Scheme}.\\
 
 \definition{FKS Hashing Scheme}
@@ -293,6 +294,8 @@ Let $n_i=|T[i]|$.\\
 \Return{T}
 \end{algorithm}
 \nb $\prob(\text{Collisions in }T_i\geq1)\leq\frac12$ and \nb $\prob(\text{Collisions in }T\geq n)\leq\frac12$ so we expect to have to build each table twice.\\
+
+\remark{If $n$ items are mapped to the same index this counts as ${n\choose2}$ collision.}
 
 \proposition{FKS Hashing Scheme - \lstinline!lookup!}
 Below is an algorithm for \lstinline!lookup(x)! in the \textit{Hash Tables} produced by the \textit{FKS Hashing Scheme}
@@ -337,9 +340,110 @@ expect(\text{construction time})&=&{\displaystyle\expect\left(\text{construction
 	\item[-] Can be build in $O(n)$ expected time.
 \end{itemize}
 
+\subsection{Cuckoo Hashing}
+
+%TODO something about bucketing
+\remark{}
+If our consruction has the property that $\forall\ x,y\in S$ with $x\neq y$ the probabiltiy that $x$ and $y$ are in the same bucket is $O\left(\frac1m\right)$, then for any $n$ operations the expected run-time is $O(1)$ per operation.\\
+
+\definition{Cuckoo Hashing}
+In \textit{Cuckoo Hasing} we use two hash functions, $h_1\ \&\ h_2$, to produce a single hash table.\\
+When we \lstinline!add! a value $x$ to the hash table we place it in position $h_1(x)$. If there is already a value, $y$, already in this position then we move that value, $y$, to its alternative positione. We keep moving values until each value is in its position. If it is not possible (\ie we have found a cycle) then we change $h_1\ \&\ h_2$ for new hash functions and rehash all the values.\\
+This is formally descibed in the algorithm below\\
+\begin{algorithm}[H]
+\SetKwInOut{Require}{require}
+\caption{Cuckoo Hashing - Insert}
+\Require{$\{x_1,\dots,x_n\}$ $\{\text{stream of keys}\}$, $T\ \{\text{Table with $m$ entries}\}$}
+\textbf{choose} $h_1,h_2$
+\For{$i\in[1,n]$}{
+	$pos=h_1(x)$.\\
+	$checked=[]$.\\
+	\While{$T[pos]$ not empty}{
+		\lIf{$x\in checked$}{\textbf{rehash}}
+		$checked$ append $x$.
+		$y=T[pos]$.\\
+		$T[pos]=x$.\\
+		$pos=$alternative position for $y$.\\
+		$x=y$.
+	}
+	$T[pos]=x$.
+}
+\Return{T}
+\end{algorithm}
+\nb \textit{Rehash} involves chooseing two new hash functions $h_1\ \&\ h_2$ are reinserting all keys, $\{x_1,\dots,x_n\}$ into the table.\\
+
+\propositionn{Cuckoo Hashing Scheme - Properties}
+\begin{enumerate}
+	\item An \lstinline!add! takes \textit{amortised exepcted} time $O(1)$.
+	\item Every \lstinline!lookup! and every \lstinline!delete! has time complexity $O(1)$ in the worst-case.
+	\item The space requirement is $O(n)$ where $n$ is the number of keys stored.
+\end{enumerate}
+
+\remark{Assumptions in Cuckoo Hashing}
+In \textit{Cuckoo Hashing} we make the following assumptions
+\begin{enumerate}
+	\item $h_1$ and $h_2$ are indepenent.\\
+	\ie $h_1(x)$ says nothing about $h_2(x)$, and visa-versa.
+	\item $h_1$ and $h_2$ are truly random.\\
+	\ie They map to each entry in the hash table with uniform probability.
+	\item Computing the value of $h_1(x)$ and $h_2(x)$ takes $O(1)$ time in the worst-case.
+\end{enumerate}
+
+\definition{Cuckoo Graph}
+A \textit{Cuckoo Graph} is an interprettation of a \textit{Hash Table} using \textit{Graph Theory}.\\
+Each vertex of the graph is an entry in the hash table and for each $x_i$ we add an undirected-edge between $h_1(x_i)$ and $h_2(x_i)$.\\
+If any cycles occur in a \textit{Cucko Graph} then we know construction will fail for that pair of hash functions as no stable scenario can occur.\\
+The length of the longest path tells us the time for the longest insert.\\
+
+\theorem{Probability of Long Paths in Cuckoo Graphs}
+Let $m$ be the size of a hash table \& $n$ the number of entries we wish to insert
+Fr any pair of positions $i$ and $j$, and any constant $c>1$, if $m\geq2cn$ then the probability that there exists a shortest path in the cuckoo graph from $i$ to $j$ with length $l\geq1$ is at most $\frac1{c^lm}$.\\
+
+\proof{Theorem 1.5}
+TODO\\
+
+\proof{Probability of a path between two positions in a Cuckoo Graph}
+If a path exists from $i$ to $j$, ther emust be a shortest path from $i$ to $j$.\\
+Therefore we can use \textbf{Theorem 1.5} and the \textit{Union Bound} over all possible paths to show the probability of a path from $i$ to $j$ existing is at most
+$$\sum_{l=1}^\infty\frac1{c^lm}=\frac1m\sum_{l=1}^\infty\frac1{c^l}=\frac1m\frac1{c-1}=O\left(\frac1m\right)$$
+
+\definition{Buckets}
+We say that two keys $x\ \&\ y$ are in the same \textit{bucket} iff there exists a path from $h_1(x)$ to $h_1(y)$ in a \textit{Cuckoo Graph}.\\
+Note that this implies there is a path from $h_1(x),h_2(y)$; $h_2(x),h_1(y)$ and $h_2(x),h_2(y)$ as there are edges $(h_1(x),h_2(x))$ \& $(h_1(y),h_2(y))$.\\
+
+\remark{The time for an operation on $x$ is bounded by the number of items in its bucket.}
+
+\proposition{Probabiltiy of being in the same Bucket}
+For $x,y\in S$ with $x\neq y$ the probability that they are in the same bucket is at most
+$$\sum_{l=1}^\infty\frac4{c^lm}=\frac4m\sum_{l=1}^\infty\frac1{c^l}=\frac4m\frac1{c-1}=O\left(\frac4m\right)$$
+If the size of a hash table is $m\geq2cn$ then the expeceted time per operation is $O(1)$.\\
+Further, \lstinline!lookup!s take $O(1)$ time in the worst case.\\
+
+\proposition{Probability of Rehashing}
+The probabiltiy that a rehashing occurs in \textit{Cuckoo Hashing} is equal to the probability of the \textit{Cuckoo Graph} having a cycle.\\
+A cycle is a path from $x$ to $x$, via some intermidiary vertices.\\
+Thus the probability that $x$ is involved in a cycle is
+$$\sum_{l=1}^\infty\frac1{c^lm}=\frac1{m(c-1)}$$
+by \textbf{Proof 1.7}.\\
+Thus the probabiltiy that there is at least one cycle in the whole hash table is
+$$m\frac1{m(c-1)}=\frac1{c-1}$$
+
+\proposition{Construction Time - Cuckoo Hashing}
+Consider the result in \textbf{Proposition 1.9} when $c=3$.\\
+The probability of a rehashing occuring is $\frac12$.\\
+Thus we expected only one rehash to be necessary. The the expected time for a rehash is $O(n)$ then the expeceted construction time for the table is $O(n)$.\\
+Therefore the \textit{amortised expeced} time for rehashes over $n$ insertions is $O(1)$ per insertion.\\
+\nb Checking for a cycle in a graph takes $O(n)$ time.
+
 \newpage
 \setcounter{section}{-1}
 \section{Reference}
+
+\subsection{Definitions}
+
+\definition{Amortised Expected}
+\textit{Amortised Expected} is a term for the complexity of something. It describes the total complexity to execute a sequence of instructions, divided by the number of instructions.\\
+\eg If $n$ instructions take $O(n)$ time to execute completley, then the \textit{amortised expected} time is $O(1)$.
 
 \subsection{Probability}
 
