@@ -415,7 +415,7 @@ Note that this implies there is a path from $h_1(x),h_2(y)$; $h_2(x),h_1(y)$ and
 
 \proposition{Probabiltiy of being in the same Bucket}
 For $x,y\in S$ with $x\neq y$ the probability that they are in the same bucket is at most
-$$\sum_{l=1}^\infty\frac4{c^lm}=\frac4m\sum_{l=1}^\infty\frac1{c^l}=\frac4m\frac1{c-1}=O\left(\frac4m\right)$$
+$$\sum_{l=1}^\infty\frac1{c^lm}=\frac1m\sum_{l=1}^\infty\frac1{c^l}=\frac1m\frac1{c-1}=O\left(\frac1m\right)$$
 If the size of a hash table is $m\geq2cn$ then the expeceted time per operation is $O(1)$.\\
 Further, \lstinline!lookup!s take $O(1)$ time in the worst case.\\
 
@@ -434,6 +434,43 @@ The probability of a rehashing occuring is $\frac12$.\\
 Thus we expected only one rehash to be necessary. The the expected time for a rehash is $O(n)$ then the expeceted construction time for the table is $O(n)$.\\
 Therefore the \textit{amortised expeced} time for rehashes over $n$ insertions is $O(1)$ per insertion.\\
 \nb Checking for a cycle in a graph takes $O(n)$ time.
+
+\section{Bloom Filters}
+
+\definition{Bloom Filter}
+A \textit{Bloom Filter} is a data structure which is designed to be a space efficient way of storing a set $S$.\\
+\textit{Bloom Filters} support only the following operations
+\begin{center}
+\begin{tabular}{l|l}
+\textbf{Operation}&\textbf{Description}\\\hline
+\lstinline!insert(k)!&Insert the key \lstinline!(k)!.\\
+\lstinline!member(k)!&Returns \lstinline!true! if \lstinline!(k)!$\in S$, no otherwise.
+\end{tabular}
+\end{center}
+Note that there is no way to remove objects from a \textit{Bloom Filter} \& you cannot ask which keys are in the \textit{Bloom Filter}, only whether a particular key is.\\
+\nb \textit{Bloom Filters} are meant to be used in cases where the size of the sample space is much larger than the number of keys being stored.\\
+
+\remark{Motivation}
+\textit{Bloom Filters} can be used to build a blacklist of unsafe URLS. Whenever a new unsafe URL, \lstinline!k!, is discovered we add it to the filter, \lstinline!insert(k)!.\\
+Whenever we want to visit to a new URL, \lstinline!k!, we can query whether it is in the bloom filter, \lstinline!member(k)!, and if we are returned \textit{yes} then it is blocked.\\
+
+\remark{Randomness in Bloom Filter}
+A \textit{Bloom Filter} is randomised in such a way that \lstinline!member(k)! will sometimes return \textit{yes} when in fact \lstinline!k!$\not\in S$. However it will never return \textit{no} if \lstinline!k!$\in S$.\\
+\nb The amount of space used by a \textit{Bloom Filter} depends on the failure rate we allow it.\\
+
+\proposition{Usefullness of Bloom Filter}
+For a \textit{Bloom Filter} \lstinline!insert(k)! \& \lstinline!member(k)! both run in $O(1)$ and it requries $O(n)$ bits of space to store up to $n$ keys.\\
+
+\proposition{Building a Bloom Filter - Array}
+A na\"ive approach to building a \textit{Bloom Filter} is to use an array.\\
+Suppose we have sample space $1,2,\dots,|U|$ for key values.\\
+We can store a set by mainting a bit string $B$ where $B[k]=1$ if $k\in S$ and $B[k]=0$ otherwise.\\
+\eg \begin{tabular}{|c|c|c|c|c|c|}
+\hline
+1&2&3&4&5&6\\\hline
+0&1&0&0&0&1\\\hline
+\end{tabular} here $|U|=6$ and $S=\{2,6\}$.\\
+The \textit{Bloom Filter} operations take $O(1)$ time but the array is $|U|$ long.\\
 
 \newpage
 \setcounter{section}{-1}
