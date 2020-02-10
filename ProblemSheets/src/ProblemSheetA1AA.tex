@@ -1,0 +1,206 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in, paperwidth=8.3in, paperheight=11.7in]{geometry}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{changepage} 
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\begin{document}
+
+\pagestyle{fancy}
+\setlength\parindent{0pt}
+\allowdisplaybreaks
+
+\renewcommand{\headrulewidth}{0pt}
+\hyphenpenalty 10000
+\exhyphenpenalty 10000
+
+% Cover page title
+\title{Advanced Algorithms - Problem Sheet 1}
+\author{Dom Hutchinson}
+\maketitle
+
+% Header
+\fancyhead[L]{Dom Hutchinson}
+\fancyhead[C]{Advanced Algorithms - Problem Sheet 1}
+\fancyhead[R]{\today}
+
+% Counters
+\newcounter{qpart}[section]
+
+% commands
+\newcommand{\dotprod}[0]{\boldsymbol{\cdot}}
+\newcommand{\cosech}[0]{\mathrm{cosech}\ }
+\newcommand{\cosec}[0]{\mathrm{cosec}\ }
+\newcommand{\sech}[0]{\mathrm{sech}\ }
+\newcommand{\prob}[0]{\mathbb{P}}
+\newcommand{\nats}[0]{\mathbb{N}}
+\newcommand{\cov}[0]{\mathrm{cov}}
+\newcommand{\var}[0]{\mathrm{var}}
+\newcommand{\expect}[0]{\mathbb{E}}
+\newcommand{\reals}[0]{\mathbb{R}}
+\newcommand{\integers}[0]{\mathbb{Z}}
+\newcommand{\indicator}[0]{\mathds{1}}
+\newcommand{\nb}[0]{\textit{N.B.} }
+\newcommand{\ie}[0]{\textit{i.e.} }
+\newcommand{\eg}[0]{\textit{e.g.} }
+\newcommand{\iid}[0]{\overset{\text{iid}}{\sim} }
+\newcommand{\x}[0]{\textbf{x} }
+\newcommand{\X}[0]{\textbf{X} }
+\newcommand{\Mod}[0]{\text{ mod }}
+\newcommand{\proved}[0]{$\hfill\square$}
+
+\newcommand{\qpart}[0]{\stepcounter{qpart} \textbf{Question \arabic{section} \alph{qpart})\\}}
+\newcommand{\qpartnb}[0]{\stepcounter{qpart} \textbf{Question \arabic{section} \alph{qpart})} - }
+\newcommand{\ans}[0]{ \textbf{Answer \arabic{section}\\}}
+\newcommand{\apart}[0]{ \textbf{Answer \arabic{section} \alph{qpart})\\}}
+\newcommand{\apartnb}[0]{\stepcounter{qpart} \textbf{Answer \arabic{section} \alph{qpart})}}
+\newcommand{\question}[0]{\stepcounter{section}\section*{Question - \arabic{section}.}}
+
+\question
+A hash function family, $H=\{h1,h_2,\dots\}$ is weakly-universal iff for randomly and uniformly chosen $h\in H$, we have $\prob[h(x)=h(y)]\leq1/m$ for $x,y\in S$ with $x\neq y$.\\
+Consider the following hash function families. For each one, prove that it is weakly universal or given a counter-example.\\
+
+\qpart
+Let $p$ be a prime number and $m\in\nats$ with $p\geq m$.\\
+Consider the hash function family where you pick at random $a\in[1,p-1]$ and define $h_a:[0,p-1]\to[0,m-1]$ as $h_a(x)=(ax\mod p)\mod m$.\\
+
+\apart
+Consider the case where $m=3\ \&\ p=5$.\\
+We have that $a\in[1,4]$,  $h_a:[0,4]\to[0,2]$ and $h_a(x)=(ax\mod5)\mod3$.\\
+By evaluating every $x$ at every $h_a(\cdot)$ we get
+\begin{center}
+\begin{tabular}{c|ccccc}
+$a\backslash x$&0&1&2&3&4\\\hline
+$h_1(x)$&0&1&2&0&1\\
+$h_2(x)$&0&2&1&1&0\\
+$h_3(x)$&0&0&1&1&2\\
+$h_4(x)$&0&1&0&2&1
+\end{tabular}
+\end{center}
+By considering this table we see that $\prob(h(1)=h(4))=\frac{2}{4}=\frac{1}{2}>\frac{1}{3}=\frac{1}{m}$.\\
+Thus this \underline{is not} a \textit{Weakly Universal Hashing Family}.\\
+
+\qpart
+Let $p$ be a prime number and $m\in\nats$ with $p\geq m$.\\
+Consider the hash function family where you pick at random $b\in[0,p-1]$ and define $h_b:[0,p-1]\to[0,m-1]$ as $h_b(x)=(x+b\mod p)\mod m$.\\
+
+\apart
+Consider the case where $m=3\ \&\ p=5$.\\
+We have that $b\in[0,4]$, $h_b:[0,4]\to[0,2]$ with $h_b(x)=(x+b\mod5)\mod3$.\\
+By evaulating every $x$ at every $h_b(\cdot)$ we get
+\begin{center}
+\begin{tabular}{c|ccccc}
+$b\backslash x$&0&1&2&3&4\\\hline
+$h_0(x)$&0&1&2&0&1\\
+$h_1(x)$&1&2&0&1&0\\
+$h_2(x)$&2&0&1&0&1\\
+$h_3(x)$&0&1&0&1&2\\
+$h_4(x)$&1&0&1&2&0
+\end{tabular}
+\end{center}
+By considering this table we see that $\prob(h(0)=h(3))=\frac{2}{5}>\frac{1}{3}=\frac{1}{m}$.\\
+Thus this \underline{is not} a \textit{Weakly Universal Hashing Family}.\\
+
+\qpart
+Let $p$ be a prime number and $m\in\nats$ with $p\geq m$.\\
+Consider the hash function family where you pick at random $a\in[1,p-1]\ \&\ b\in[0,m-1]$ and define $h_{a,b}:[0,p-1]\to[0,m-1]$ as $h_{a,b}(x)=((ax+b)\mod p)\mod m$.\\
+
+\apart
+Let $x,y\in[0,p-1]$ with $x\neq y$.\\
+Define $c:=ax+b\ \&\ d:=ay+b$.\\
+Note that in order for $(c\mod p)\mod m\not\equiv(d\mod p)\mod m$ we require ${c\mod p\not\equiv d\mod p}$, this shall be proved first (by contradiction).\\
+\\
+Suppose $c\mod p\equiv d\mod p$.\\
+Then $\exists\ e\in\mathbb{Z}$ st $c=d+ep$.\\
+Further
+\[\begin{array}{rrcl}
+\implies&ax+b&=&ay+ep\\
+\implies&ax=ay+ep\\
+\implies&x=y+\frac{e}{a}p
+\end{array}\]
+We have a contradiction here. Either $x>p$ (out of bounds), or $x=y$ (contradiction of definitions).\\
+Thus $c\mod p\not\equiv d\mod p$.\\
+\\
+Define $f:=c\mod p$ \& $g:=d\mod p$.\\
+We have that $f,g\in[0,m-1]$.\\
+If we fix the value of $f$ and allow $g$ to take any of the $m$ values then $\prob(f=g)\leq\frac1m$.\\
+Thus $\prob(h(x)=h(y))\leq\frac1m$ for $x\neq y$.\\
+Thus this \underline{is} a \textit{Weakly Universal Hashing Family}.\proved
+
+\question
+Consider a small variant of cuckoo hashing where we use two tables $T_1$ \& $T_2$ of the same size and hash functions $h_1$ \& $h_2$.\\
+When inserting a new key $x$, we first try to put $x$ at position $h_1(x)$ in $T_1$. If this leads to a collision, then the previously stored key $y$ is moved to position $h_2(y)$ in $T_2$. If this leasds to another collision, then the next key is again inserted at the appropriate position in $T_1$, and so on. In some cases, this procedure continues forever \ie the same configuration appears after some steps of moving hte keys around to dissolve collisions.\\
+
+\qpart
+Consider two tables of size 5 each and tow has functions $h_1(k)=k\mod5$ and $h_2(k)=\left\lfloor\frac{k}{5}\right\rfloor\mod5$. Insert the keys $\{27,2,32\}$ in this order into initially empty hash tables, and show the result.\\
+
+\apartnb
+\begin{enumerate}[label=\arabic*)]
+	\item Insert 27 to $h_1(27)=27\mod5=2$.\\
+	There are no collisions.\\
+	\begin{tabular}{c|ccccc}
+		&0&1&2&3&4\\\hline
+		$T_1$&-&-&27&-&-\\
+		$T_2$&-&-&-&-&-
+	\end{tabular}
+	\item Insert 2 to $h_1(2)=2\mod5=2$.\\
+	Collision with $27$.\\
+	Move $27$ to $h_2(27)=\left\lfloor\frac{27}5\right\rfloor\mod5=5\mod5=0$.\\
+	\begin{tabular}{c|ccccc}
+		&0&1&2&3&4\\\hline
+		$T_1$&-&-&2&-&-\\
+		$T_2$&27&-&-&-&-
+	\end{tabular}
+	\item Insert 32 to $h_1(32)=32\mod5=2$.\\
+	Collision with $2$.\\
+	Move $2$ to $h_2(2)=\left\lfloor\frac{2}5\right\rfloor\mod5=0\mod5=0$.\\
+	Collision with $27$.\\
+	Move $27$ to $h_1(27)=2$.\\
+	Collision with 32.
+	Move $32$ to $h_2(32)=\left\lfloor\frac{32}5\right\rfloor\mod5=6\mod5=1$.\\
+	\begin{tabular}{c|ccccc}
+		&0&1&2&3&4\\\hline
+		$T_1$&-&-&27&-&-\\
+		$T_2$&2&32&-&-&-
+	\end{tabular}
+\end{enumerate}
+
+\qpart
+Find another key such that its insertion leads to an infinite sequence of key displacements.\\
+
+\apart
+Inserting a value $x$ where $h_1(x)=2$ and $h_2(x)=0$ will create a value as we will have three values $\{x,27,2\}$ trying to fill two places.\\
+The value \underline{52} would be valid.\\
+If we try inserting 52 we find the following occurs
+\begin{adjustwidth}{1cm}{}
+	Insert 52 to $h_1(52)=52\mod5=2$.\\
+	Collision with 27.\\
+	Move $27$ to $h_2(27)=0$.\\
+	Collision with 2.\\
+	Move $2$ to $h_1(2)=2$.\\
+	Collision with 52.\\
+	Move 52 to $h_2(52)=\left\lfloor\frac{52}{5}\right\rfloor\mod5=10\mod5=0$.\\
+	Collision with 27.\\
+	Move 27 to $h_1(27)=2$.\\
+	Collision with 2.\\
+	Move 2 to $h_2(2)=0$.\\
+	Collision with 52.\\
+	Move 52 to $h_1(52)=2$.\\
+	$\vdots$
+\end{adjustwidth}
+
+\question
+In order to use cuckoo hashing under an unbounded number of key insertions, we cannot have a hash table of fixed size. The size of the hash table has to scale with the number of keys inserted. Suppose that we never delete a key that has been inserted. Consider the following approach with Cuckoo hashing. When the current hash table fills up to its capacity, a new hash table of doubled size is created. All keys are then rehashed to teh new table. Argue that the average time it takes to resize and rebuild the has table, if spread out over all insertions is constant in expectation. That is, the expected amortised cost of rebuilding is constant.\\
+
+\ans
+
+\end{document}
