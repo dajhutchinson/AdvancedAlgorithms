@@ -472,6 +472,49 @@ We can store a set by mainting a bit string $B$ where $B[k]=1$ if $k\in S$ and $
 \end{tabular} here $|U|=6$ and $S=\{2,6\}$.\\
 The \textit{Bloom Filter} operations take $O(1)$ time but the array is $|U|$ long.\\
 
+\proposition{Building a Bloom Filter - Hash Table}
+Let $h:U\to[1,m]$ be a hash function.\\
+We can implement a \textit{Bloom Filter} using a \textit{Hash Table} is we define that performing \lstinline!insert(k)! sets $B[h(k)]=1$ and \lstinline!member(k)! returns $\mathtt{true}$ if $B[h(k)]==1$, and $\mathtt{false}$ otherwise.\\
+Using a hash function means the bit string $B$ being maintained is much shorter than if we used the \textit{Array} approach in \textbf{Proposition 2.2}, however we now have to deal with collisions \& thus false-positive results from \lstinline!member(k)!.\\
+\nb false-positives occur \lstinline!member(k)! if $\exists k'\in S$ st $h(k')=h(k)$.\\
+
+\remark{Reducing Collisions - Bloom Filter as Hash Table}
+To ensure a low probability of collisions each operation, we pick the hash function $h$ at random (Note that we don't change $h$ after it is set).\\
+
+\proposition{Probability of False Positive - Bloom Filter as Hash Table}
+Suppose we have inserted $n$ keys into the \textit{Bloom Filter} and now we perform \lstinline!member(k)! for $k\not\in S$.\\
+The bit string $B$ contains at most $n$ 1s among its $m$ positions.\\
+By definition the hash function assigns values uniformly $\prob(h(i)=j)=\frac1m$ for $k\in[1,m]$.\\
+Thus the probability of a false-positive is $\prob(B[h(k)]=1)\leq\frac{n}m$.\\
+If we choose $m$ to be $100n$ then $\prob(B[h(k)]=1)\leq.01$.\\
+
+\proposition{Bloom Filter Complexities}
+Both \lstinline!insert(k)! and \lstinline!member(k)! run in $O(1)$ and the structure uses $m$ bits.\\
+If we want a .01 false positive rate then $100n$ bits are required.\\
+
+\proposition{Building a Bloom Filter - Proper}
+Again we are maintaining a bit string $B$ of length $m<|U|$.\\
+Let $h_1,\dots,h_r$ be $r$ hash functions which map $U\to[1,m]$ uniformly at random.
+\begin{itemize}
+	\item[-] \lstinline!insert(k)! sets $B[h_i(k)]=1$ for \underline{all} $i\in[1,r]$.
+	\item[-] \lstinline!member(k)! returns $\mathtt{true}$ iff $B[h_i(k)]=1\ \forall\ i\in[1,r]$.
+\end{itemize}
+
+\proposition{Probability of False Positive for \textbf{Proposition 2.6}}
+Assume that we have inserted $n$ keys into the \textit{Bloom Filter} and that we are performing \lstinline!member(k)! for $k\not\in S$.\\
+This checks whether $B[h_i(k)]=1\ \forall\ i\in[1,r]$.\\
+This is question whether $r$ randomly chosen bits of $B$ all equal 1 due to hash functions being uniformly random.\\
+As there are $n$ keys in the \textit{Bloom Filter} at most $nr$ bits of $B$ are set to 1.\\
+So $\frac{nr}{m}$ is the proportion of bits set to $1$ in $B$.\\
+So the probability that a ranomly chosen bit is $1$ is $\leq\dfrac{nr}{m}$.\\
+Thus the probability that $r$ randomly chosen bits are all equal to 1 is $\leq\left(\dfrac{nr}{m}\right)^r$.\\
+
+\proposition{Minimising False Positive Rate}
+By differentiating $\leq\left(\dfrac{nr}{m}\right)^r$ we find it is minimised for $r=\frac{m}{ne}$.\\
+If we substitute this back in we get a false positive rate of at most $\left(\frac1e\right)^{\frac{m}{ne}}\approx(0.69)^\frac{m}{n}$.\\
+So for a failure rate of $1\%$ we set $m\approx12.52 n$.\\
+This is much better than $m=100n$ required for \textbf{Proposition 2.4}.
+
 \newpage
 \setcounter{section}{-1}
 \section{Reference}
