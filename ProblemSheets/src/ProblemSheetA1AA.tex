@@ -13,6 +13,20 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    frameround=fttt,
+    language=Prolog,
+    numbers=left,
+    breaklines=true,
+    keywordstyle=\color{blue}\bfseries, 
+    basicstyle=\ttfamily\color{red},
+    numberstyle=\color{black}
+    }
+
 \begin{document}
 
 \pagestyle{fancy}
@@ -130,9 +144,9 @@ Further
 We have a contradiction here. Either $x>p$ (out of bounds), or $x=y$ (contradiction of definitions).\\
 Thus $c\mod p\not\equiv d\mod p$.\\
 \\
-Define $f:=c\mod p$ \& $g:=d\mod p$.\\
+Define $f:=(c\mod p)\mod m$ \& $g:=(d\mod p)\mod m$.\\
 We have that $f,g\in[0,m-1]$.\\
-If we fix the value of $f$ and allow $g$ to take any of the $m$ values then $\prob(f=g)\leq\frac1m$.\\
+If we fix the value of $f$ and allow $g$ to take any of the $m$ values then $\prob(f=g)\leq\frac1m$ since we know $c\mod p\not\equiv d\mod p$.\\
 Thus $\prob(h(x)=h(y))\leq\frac1m$ for $x\neq y$.\\
 Thus this \underline{is} a \textit{Weakly Universal Hashing Family}.\proved
 
@@ -202,5 +216,96 @@ If we try inserting 52 we find the following occurs
 In order to use cuckoo hashing under an unbounded number of key insertions, we cannot have a hash table of fixed size. The size of the hash table has to scale with the number of keys inserted. Suppose that we never delete a key that has been inserted. Consider the following approach with Cuckoo hashing. When the current hash table fills up to its capacity, a new hash table of doubled size is created. All keys are then rehashed to teh new table. Argue that the average time it takes to resize and rebuild the has table, if spread out over all insertions is constant in expectation. That is, the expected amortised cost of rebuilding is constant.\\
 
 \ans
+%TODO this seems to trivial
+We want to find $\expect(\text{time to reize then rehash})$ a full table of $n$ items.\\
+This is equivalent to $\expect(\text{time to reize})+\expect(\text{time to rehash})$ as these are independent.\\
+We have that $\expect(\text{time to resize})\in O(2n)=O(n)$ and $\expect(\text{time to rehash})\in O(n)$.\\
+Thus $\expect(\text{time to reize})+\expect(\text{time to rehash})\in O(n)+O(n)=O(n)$.\\
+As we are acting on $n$ items this is equivalent to expected amortised cost of $O(1)$.
+
+\question
+Answer the following three questions on Bloom filters.\\
+
+\qpartnb What operations do we perform on Bloom filters?\\
+
+\apart
+\lstinline!insert(k)! which inserts key \lstinline!k! into the Bloom filter and \lstinline!member(k)! which returns a boolean stating whether or not key \lstinline!k! is in the Bloom filter.\\
+
+\qpartnb What is the difference between hash tables \& Bloom filters in terms of which data can be accessed?\\
+
+\apart
+In Hash tables you can store a value along with a key. When you perform a \lstinline!lookup(k)! on a hash table you get returned the value \lstinline!v! which is associated with key \lstinline!k!.\\
+
+\qpartnb Why is there a problem when deleting elements from a Bloom filter?\\
+
+\apart
+Assume that \lstinline!member(k)! would set $B[h_i(k)]=0\ \forall\ i\in[1,r]$ where $B$ is the bit string being maintained by the Bloom Filter and $\{h_1(\cdot),\dots,h_r(\cdot)\}$ are the hash functions being used.\\
+When \lstinline!insert(k)! is performed we set $B[h_i(k)]=1\ \forall\ i\in[1,r]$. When \lstinline!member(k)! is performed $\mathtt{true}$ is returned iff $B[h_i(k)]\equiv1\ \forall\ i\in[1,r]$. So if at least one of these indexs is not equal to one then $\mathtt{false}$ is returned. There is a non-zero that there exists $i,j\in[1,m]$ st $h_i(x)=h_j(y)$ for distinct keys $x\ \&\ y$. If both these were inserted and then \lstinline!delete(x)! was performed then $B[h_j(y)]$ would be set to zero. Meaning that \lstinline!member(y)! would return $\mathtt{false}$ even though the $y$ has not been removed. Thus $B$ no longer represents all the values stored in the Bloom filter.
+
+\question
+Suppose you have two Bloom Filters $A$ and $B$ (each having the same number of cells and same hash function) representing two sets $A$ and $B$.\\
+Let $C:=A\wedge B$ be the Bloom filter formed by computing the bitwise boolean $\mathtt{and}$ of $A$ and $B$.\\
+
+\qpart
+$C$ may not always be the same as the Bloom filter that would be constructed by adding the elements of the set $A\cap B$ one at a time. Explain why.\\
+
+\apart
+Let $x\ \&\ y$ be two distinct keys \& suppose we use a hash function, $h(\cdot)$, where $h(x)=h(y)$.\\
+If we insert $x$ into $A$ \& $y$ into $B$ only then $A$ \& $B$ will have identical bit strings.\\
+Thus $A\wedge B=A=B\implies C=A$.\\
+Note that $A\cup B=\emptyset$ and thus the bloom filter which would be constructed by adding the elements of $A\cup B$ one at a time is just the empty string.\\
+This is not the same as $C$, which is not empty.\\
+
+\qpart
+Does $C$ correctly represent the set $A\cap B$ in the sense that it gives a positive answer for membership queries of all elements in this set? Explain why, or why not.\\
+
+\apart
+Yes.\\
+Suppose we are inserting a key $k$ into both $A$ and $B$. Since we are using the same hash functions for both, the same indicies in $A$ and $B$ will be set to 1 by this insertion. Since indicies can never be changed by to 0 they will still have a value of 1 after all insertions. Thus we have the indicies $k$ is hashed to will all have a value of 1 after all insertions. These values will still be 1 after bitwise $\mathtt{and}$ operation and thus will all have a value of 1 in $C:=A\wedge B$. \lstinline!lookup(k)! will hold for all values in $A\cup B$.\\
+
+\qpart
+Suppose that you want to store a set $S$ of $n=20$ elements, drawn from a universe of $U=10,000$ possible keys, in a Bloom filter of exactly $N=100$ cells, and that we care about the accuracy of the Bloom filter and not its speed. For this problem size, what is the best choice of the number of hash functions, $r$? (That is, what value of $r$ gives the smallest possible probability that a key not in $S$ is a false positive?) What is the probability of a false positive for this value of $r$?\\
+
+\ans
+We expected $\frac{nr}N=\frac{20 r}{100}=\frac{r}5$ bits to be set to 1 in the bit string maintained by this bloom filter.\\
+Thus the probability of \lstinline!member(k)! producing a false positive is $\left(\frac{r}5\right)^r$.\\
+We want to find the value of $r$ which minimises $\left(\frac{r}5\right)^r$.\\
+Set $y=\left(\frac{r}5\right)^r$ and take the derivative wrt $r$
+\[\begin{array}{rrcl}
+\text{Let}&y&=&\left(\frac{r}5\right)^r\\
+\implies&\ln y&=&r[\ln r-\ln5]\\
+\implies&\frac{d}{dr}(\ln y)&=&\frac{d}{dr}(r[\ln r-\ln5])\\
+\implies&\frac1y\frac{dy}{dr}&=&[\ln r-\ln5]+r[\frac1r-0]\\
+\implies&\frac{dy}{dr}&=&y(\ln r-\ln 5+1)\\
+&&=&\left(\frac{r}5\right)^r(\ln r-\ln 5+1)\\
+\text{Set}&\frac{dy}{dr}&=&0\\
+\implies&0&=&\left(\frac{r}5\right)^r(\ln r-\ln 5+1)\\
+\implies&0&=&\left(\frac{r}5\right)^r(\ln r-\ln 5+1)\\
+&&&\text{No solutions for }r\\
+\text{or}&0&=&\ln r-\ln 5+1\\
+\implies&\ln r&=&\ln5-1\\
+\implies&r&=&e^{\ln 5-1}\\
+&&=&\frac{5}{e}\\
+&&\approx&1.839
+\end{array}\]
+We require that $r$ is an integer so test $r=1$ and $r=2$ to find the lowest value.\\
+$r=1\implies y=\frac15$, $r=2\implies y=\left(\frac25\right)^2=\frac4{25}<\frac15$.\\
+Thus using $r=2$ hash functions produces the most accurate bloom filter in this scenario.
+
+\question
+This question is about perfect hashing.\\
+
+\qpart
+Our perfect hashing scheme assumed the set of keys stored in the table is static. Suppose instead that we want to add a few new items to our table after the initial construction. Suggest a way to modify our intitial construction so that we can insert these new items using no new space and without making significant changes to our existing table (in particular, we don’t want to change our initial hash function). Your scheme should still do lookups of all items in $O(1)$ time, but you may use a bit more initial space.\\
+
+\apart
+When inserting a new item, $x$, use the initial hashing function to find which $T_i$ to insert $x$ into. Then use $h_i$ to find where to place $x$ in $T_i$. If $T_i[h_i(x)]$ is already occupied then rehash $T_i$ with a new hashing function. Note that eventually this will eventually fill up but as $T_i$ has $n_i^2$ spaces \& initially only had $n_i$ elements in it, there are $n_i(n_i-1)$ free spaces so this will take a while for reasonably large $n$.\\
+%TODO what about n=1,2??
+
+\qpart
+Suppose now that we want to delete some of our initial terms. Describe a simple way to support deletions in our perfect hashing scheme.\\
+
+\apart
+Suppose we want to delete an entry with key $x$ from the table produced by the FKS hashing scheme. Use $h(\cdot)$ to find which $T_i$ $x$ is in, then set $T_i[h_i(x)]=\mathtt{NULL}$. If we are unsure whether there is an entry with key $x$ in the table then we should check that the key of the element at position $T_i[h_i(x)]$ is equal to $x$.
 
 \end{document}
