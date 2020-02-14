@@ -12,7 +12,7 @@ class Abstract_Static_Hash_Table():
     def __init__(self,m:int,values:[("key","val")]): print("__init__() - Not Implemented"); pass # m is size of table
     def lookup(self,key): return "lookup() - Not Implemented"
 
-class FKS_Static_Hash_Table():
+class FKS_Static_Hash_Table(Abstract_Static_Hash_Table):
     """
     build in O(n) expected time (O(1) amortised expected)
     lookup O(1) time in worst case
@@ -55,10 +55,77 @@ class FKS_Static_Hash_Table():
             self.__table[i]=ti # store table
         print(self.__table)
 
+    # Returns val associated to key
     def lookup(self,key)->"val":
         i=self.__h.hash(key,len(self.__table))
         j=self.__hs[i].hash(key,len(self.__table[i]))
         return self.__table[i][j]
+
+class Cuckoo_Hashing(Abstract_Dynamic_Hash_Table):
+
+    def __init__(self,m:int):
+        self.__h1=Hash_Function(s=m) # Hash functions
+        self.__h2=Hash_Function(s=m)
+        self.__T=[None]*m # Table
+
+    # Rehash whole table
+    def __rehash(self,T,next):
+        m=len(T)
+        self.__h1=Hash_Function(s=m) # Hash functions
+        self.__h2=Hash_Function(s=m)
+        vals=[x for x in T if x!=None]
+        self.__T=[None]*(m)
+        for x in vals:
+            if (not self.insert(key=x[0],val=x[1])): self.__rehash(T,next);return
+        self.insert(key=next[0],val=next[1])
+
+    def insert(self,key,val) -> bool:
+        if (len([x for x in self.__T if x==None])==0):
+            print(self.__T)
+            print("Table Full")
+            return False
+        pos=self.__h1.hash(val=key,m=len(self.__T)) # position to try
+        checked=[] # values already checked
+        while (self.__T[pos]!=None): # Swap required
+            if (key in checked): # Cycle found so rehash table
+                self.__rehash(T=self.__T,next=(key,val))
+                return
+            else: # Swap
+                checked.append(key)
+                y=self.__T[pos] # value to move
+                self.__T[pos]=(key,val) # store val
+                if (self.__h1.hash(val=y[0],m=len(self.__T))==pos): pos=self.__h2.hash(val=y[0],m=len(self.__T)) # find alternative position for y
+                else: pos=self.__h1.hash(val=y[0],m=len(self.__T))
+                key=y[0]; val=y[1]
+        self.__T[pos]=(key,val)
+        return True
+
+    # Returns value associated to key
+    def lookup(self,key) -> "val":
+        pos=self.__h1.hash(val=key,m=len(self.__T))
+        if (self.__T[pos]!=None and self.__T[pos][0]==key): return self.__T[pos][1]
+
+        pos=self.__h2.hash(val=key,m=len(self.__T))
+        if (self.__T[pos]!=None and self.__T[pos][0]==key): return self.__T[pos][1]
+
+        return None
+
+    def delete(self,key) -> bool:
+        pos=self.__h1.hash(val=key,m=len(self.__T)) # Check first position
+        if (self.__T[pos]!=None and self.__T[pos][0]==key): # Delete if keys match
+            self.__T[pos]=None
+            return True
+
+        pos=self.__h2.hash(val=key,m=len(self.__T)) # Check second position
+        if (self.__T[pos]!=None and self.__T[pos][0]==key): # Delete if keys match
+            self.__T[pos]=None
+            return True
+
+        return False
+
+    def __str__(self):
+        strings=[str(x) for x in self.__T]
+        return "[{}]".format(",".join(strings))
 
 class Hash_Function():
 
@@ -92,7 +159,19 @@ class Hash_Function():
         return ((self.__a*val+self.__b) % self.__p) % m
 
 if __name__=="__main__":
+    # Cuckoo Hashing Example
+    table=Cuckoo_Hashing(m=10)
+    vals="HelloWorld"
+    for i in range(10): table.insert(i,vals[i])
+    for i in range(10): print("{}".format(table.lookup(i)),end='')
+    print()
+    for i in range(5):  table.delete(i)
+    for i in range(10): print("{}".format(table.lookup(i)),end='')
+
+"""
+    # FKS Hashing Example
     table=FKS_Static_Hash_Table(m=5,values=[(0,"Hello"),(1,"World"),(3,"This"),(4,"is"),(7,"a"),(10,"test")])
     print(table.lookup(0)) # Note that if you pass a key which is not associated you will likely have a value returned
     print(table.lookup(1))
     print(table.lookup(3))
+"""
