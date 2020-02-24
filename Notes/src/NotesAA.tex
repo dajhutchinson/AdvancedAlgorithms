@@ -22,6 +22,7 @@
     language=Prolog,
     numbers=left,
     breaklines=true,
+    mathescape=true,
     keywordstyle=\color{blue}\bfseries, 
     basicstyle=\ttfamily\color{red},
     numberstyle=\color{black}
@@ -579,7 +580,7 @@ Suppose we wishing to store the set $S\subset U$ keys with $u=|U|$.\\
 Let $C$ be a data structure which can store the values $[1,\sqrt{u}]$, this acts as the \textit{Summary} of the next layer ($B_1,\dots,B_{\sqrt{u}}$).\\
 Let $B_1,\dots,B_{\sqrt{u}}$ be data structures, each able to store the values $[1,\sqrt{u}]$.\\
 We condition that $x$ is in $B_i$ if $(x+(i-1)\sqrt{u})\in S$ and $i$ is stored in $C$ if $B[i]$ is non-empty.\\
-We define $C,B_1,\dots,B_{\sqrt{u}}$ recursively st each is a \textit{vEB} tree over the universe $\{1,\dots,\sqrt{u}\}$.\\
+We define $C,B_1,\dots,B_{\sqrt{u}}$ recursively st each is a \textit{vEB} tree over the universe $\{1,\dots,\sqrt{u}\}$.
 %TODO
 \begin{enumerate}
 	\item \lstinline!add(x)! $\in O(1)$
@@ -641,6 +642,67 @@ By the Master's Theorem we have that $T(u)=O(\log\log u)$.\\
 Let $Z(u)$ be the space use by a \textit{vEB Tree} over a universe of size $u$.\\
 We have that
 $$Z(u)=(\sqrt{u}+1)Z(\sqrt{u})+O(1)\implies Z(u)=O(u)$$
+
+\section{Orthogonal Range Searching}
+
+\definition{$nD$ Range Searching Data Structure}
+An \textit{$n$-Dimensional Range Searching Data Structure} stores $m$ distinct $n$-dimensional data points and supports a single operation
+\begin{center}
+\begin{tabular}{l|l}
+\textbf{Operation}&\textbf{Description}\\\hline
+\lstinline!lookup($l_1,u_1,\dots,l_1,u_1$)!&Return all stored points $(z_1,\dots,z_n)$ where\\
+&$l_1\leq z_1\leq u_1$ and $\dots$ and $l_n\leq z_n\leq u_n$.
+\end{tabular}
+\end{center}
+
+\proposition{$1D$ Range Searching Data Structure}
+Consider an array of stored values $[x_1,\dots,x_n]$.\\
+Make a balanced binary tree by recursively taking the midpoint of the array as a new node and then partitioning the values around.\\
+\lstinline!lookup($l_1,u_1$)! can be performed as follows
+\begin{enumerate}
+	\item Find the successor of $l_1$. Takes $O(\log n)$ time.
+	\item Find the predecessor of $x_2$. Takes $O(\log n)$ time.
+	\item Consider each node on the path between this sucessor \& predecessor. (Path has length $O(\log n)$.\\
+	These subtrees have the property that either \underline{all} points in the tree have $x$ values in the range $[l_x,u_x]$, or \underline{none} of them do.
+\end{enumerate}
+This implementation of \lstinline!lookup($l_1,u_1$)! takes $O(\log n+k)$ time, where $k$ is the number of points to be returned, and $O(n)$ space and $O(n\log n)$ prep-time (to construct the tree).\\
+\nb Runtime depends on the size of the output.\\
+
+\proposition{$2D$ Range Searching Data Structure - Na\"ive}
+Below is a na\"ive approach for performing \lstinline!lookup(lx,ux,ly,uy)!
+\begin{enumerate}
+	\item Find all the points with $l_x\leq x\leq u_x$ using \textbf{Proposition 4.1}.
+	\item Find all the points with $l_y\leq y\leq u_y$.
+	\item Find the points in both lists.
+\end{enumerate}
+This approach has run time $O(\log n+k_x)+O(\log n+k_y)+O(k_x+k_y)=O(n+k_x+k_y)$ where $k_x$ is the number of points found in step $i)$ and $k_y$ is the number of points found in step $ii)$.\\
+
+\proposition{$2D$ Range Searching Data Structure - Proper}
+For preprocessing build a balanced binary tree using the $x$ value of each point.\\
+Here is a better implementation of \lstinline!lookup(1x,ux,ly,uy)!.
+\begin{enumerate}
+	\item Find the successor to $l_x$.
+	\item Find the predeccessor to $u_x$.
+	\item Find the path between these two points.\\
+	Each subtree on this path has the property that either \underline{all} points in the tree have $x$ values in the range $[l_x,u_x]$, or \underline{none} of them do.
+	\item For each subtree where \underline{all} points have $x$ values in the range $[l_x,u_x]$.
+	\begin{enumerate}
+		\item Build a \textit{1D Range Searching Structure} using the $y$-coordinates of each point in the tree.
+		\item Perform \lstinline!lookup(ly,uy)! on this subtree.
+	\end{enumerate}
+\end{enumerate}
+
+\remark{Time Complexity \textbf{Proposition 4.3}}
+Steps $i)-iii)$ take $O(\log n)$ time and the length of the path between the successor \& predecessor is of length $O(\log n)$.\\
+In step $iv)$ we do $O(\log n)$ 1-D lookups. Each of these takes $O(\log n+k')$ time.\\
+Thus the overall run-time is $O(log^2n+k)$ as each lookup is disjoint.\\
+\nb Preprocessing takes $O(n\log n)$ time.
+
+\remark{Space Complexity \textbf{Proposition 4.3}}
+The initial 1D structure used $O(n)$ space.\\
+At each node we stored an array containing the points in its subtree.\\
+The tree has depth $O(\log n)$.\\
+Thus the total space used is $O(n\log n)$.
 
 \newpage
 \setcounter{section}{-1}
