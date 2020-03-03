@@ -1,13 +1,24 @@
 class Binary_Search_Tree():
 
     def __init__(self,value:int,left:"Binary_Search_Tree",right:"Binary_Search_Tree"): print("__init__() - Not Implemented"); pass # m is size of table
+
+    # core
     def insert(self,key,value): return "insert() - Not Implemented"
+
+    # lookup
     def lookup(self,key): return "lookup() - Not Implemented"
     def predecessor(self,key): return "predecessor() - Not Implemented"
     def successor(self,key): return "successor() - Not Implemented"
+
+    # structure
     def left_rotation(self)->"Binary_Search_Tree": return "left_rotation() - Not Implemented"
     def right_rotation(self)->"Binary_Search_Tree": return "right_rotation() - Not Implemented"
+
+    # utility
+    def all_keys(self)->[int]: return "height() - Not Implemented"
     def height(self)->int: return "height() - Not Implemented"
+    def path(self,left:int,right:int)->["Binary_Search_Tree"]: return "path() - Not Implemented" # list of nodes on path between two values (value doesnt have to be in tree)
+    def root_path(self,key:int)->["Binary_Search_Tree"]: return "root_path() - Not Implemented" # list of nodes on path from root to value (value doesnt have to be in tree)
 
 class Balanced_Binary_Search_Tree():
 
@@ -56,26 +67,45 @@ class Balanced_Binary_Search_Tree():
         elif key<self.v: return self.l.lookup(key)
 
     # return predecessor to key in the tree, if one exists
-    def predecessor(self,key:int)->int:
+    def predecessor(self,key:int,parent_value=None)->int:
         if key==self.v: return key
-        if (self.v<key):
-            if (self.r==None): return self.v
-            if (self.r.v>key): return self.v
-            return self.r.predecessor(key)
-        else:
-            if (self.l==None): return None
-            return self.l.predecessor(key)
+        if (key>self.v and self.r==None): return self.v
+        elif key>self.v: return self.r.predecessor(key,self.v)
+        if (key<self.v and self.l==None): return parent_value # might be none
+        elif key<self.v: return self.l.predecessor(key,parent_value)
 
     # return successor to key in the tree, if one exists
-    def successor(self,key:int)->int:
+    def successor(self,key:int,parent_value=None)->int:
         if key==self.v: return key
-        if (self.v>key):
-            if (self.l==None): return self.v
-            if (self.l.v<key): return self.v
-            return self.l.successor(key)
-        else:
-            if (self.r==None): return None
-            return self.r.successor(key)
+        if (key>self.v and self.r==None): return parent_value # might be none
+        elif key>self.v: return self.r.successor(key,parent_value)
+        if (key<self.v and self.l==None): return self.v
+        elif key<self.v: return self.l.successor(key,self.v)
+
+    # returns path root to key (basterisation of lookup())
+    # works even if key is not in tree
+    def root_path(self,key:int)->["Balanced_Binary_Search_Tree"]:
+        node=self
+        path_arr=[node]
+        while (True):
+            if key==node.v: break
+            if (key>node.v and node.r==None): break # might be none
+            elif key>node.v:
+                node=node.r
+                path_arr.append(node)
+            if (key<node.v and node.l==None): break
+            elif key<node.v:
+                node=node.l
+                path_arr.append(node)
+        return path_arr
+
+    def path(self,left:int,right:int)->["Balanced_Binary_Search_Tree"]:
+        if (left>right): return None
+        left_path=self.root_path(left)
+        right_path=self.root_path(right)
+        shared_root_index=[i for i in range(min(len(left_path),len(right_path))) if left_path[i].v==right_path[i].v][-1] # index of last shared node in paths
+        path=[i for i in left_path[shared_root_index+1:]][::-1]+[i for i in right_path[shared_root_index:]]
+        return path
 
     # return height of tree
     def height(self)->int:
@@ -122,6 +152,13 @@ class Balanced_Binary_Search_Tree():
         pivot.r=self
         return pivot
 
+    # return all keys stored in (sub)-tree (unsorted)
+    def all_keys(self)->[int]:
+        keys=[self.v]
+        if (self.r!=None): keys+=self.r.all_keys()
+        if (self.l!=None): keys+=self.l.all_keys()
+        return keys
+
     # build balanced tree for list of integers
     def build_tree(data:[int])->"Balanced_Binary_Search_Tree":
         tree=Balanced_Binary_Search_Tree(data[0],None,None)
@@ -148,9 +185,6 @@ if __name__=="__main__":
     array=[i for i in range(0,15,2)]
     tree=Balanced_Binary_Search_Tree.build_tree(array)
     print(tree)
-    print(tree.lookup(14))
-    print(tree.lookup(10))
-    print(tree.predecessor(-1))
-    print(tree.predecessor(15))
-    print(tree.successor(-1))
-    print(tree.successor(15))
+    for i in range(-2,17,1):
+        print(i,tree.root_path(i))
+    print(tree.path(left=0,right=8))

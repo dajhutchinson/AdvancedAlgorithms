@@ -1,18 +1,18 @@
 from random import randint
 
-class Abstract_Dynamic_Hash_Table():
+class Abstract_Dynamic_Dictionary():
 
     def __init__(self,m:int,values:[("key","val")]): print("__init__() - Not Implemented"); pass # m is size of table
     def insert(self,key,value): return "insert() - Not Implemented"
     def lookup(self,key): return "lookup() - Not Implemented"
     def delete(self,key): return "delete() - Not Implemented"
 
-class Abstract_Static_Hash_Table():
+class Abstract_Static_Dictionary():
 
     def __init__(self,m:int,values:[("key","val")]): print("__init__() - Not Implemented"); pass # m is size of table
     def lookup(self,key): return "lookup() - Not Implemented"
 
-class FKS_Static_Hash_Table(Abstract_Static_Hash_Table):
+class FKS_Static_Hash_Table(Abstract_Static_Dictionary):
     """
     build in O(n) expected time (O(1) amortised expected)
     lookup O(1) time in worst case
@@ -61,7 +61,7 @@ class FKS_Static_Hash_Table(Abstract_Static_Hash_Table):
         j=self.__hs[i].hash(key,len(self.__table[i]))
         return self.__table[i][j]
 
-class Cuckoo_Hashing(Abstract_Dynamic_Hash_Table):
+class Cuckoo_Hashing(Abstract_Dynamic_Dictionary):
 
     def __init__(self,m:int):
         self.__h1=Hash_Function(s=m) # Hash functions
