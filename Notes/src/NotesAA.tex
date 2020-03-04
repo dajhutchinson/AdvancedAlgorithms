@@ -561,75 +561,69 @@ We can use the following schema for each operation of the \textit{Extended Dynam
 \end{enumerate}
 Here \lstinline!add!, \lstinline!delete! \& \lstinline!lookup! take $O(1)$ time, but \lstinline!predecessor! \& \lstinline!successor! take $O(u)$ time. (Not great).\\
 
-\proposition{vEB Trees - Constant Height Tree}
-Suppose we wishing to store the set $S\subset U$ keys with $u=|U|$.\\
-Let $A$ be a binary array of size $u$ where $A[i]=1$ iff $i\in S$.\\
-Suppose we split $A$ into $\sqrt{u}$ blocks, each containing $\sqrt{u}$ consecutive bits.\\
-Let $C$ be the \textit{Summary} of $A$. This means $C$ is of size $\sqrt{u}$ and $C[i]=1$ iff any but in the $i^\text{th}$ block of $A$ contains a bit of value 1.
-\begin{enumerate}
-	\item \lstinline!add(x)! - Set $A[x]=1$ and $C\left[\left\lfloor\frac{x}{\sqrt{u}}\right\rfloor\right]=1$.
-	\item \lstinline!delete(x)! Set $A[x]=0$. Check if an values in the associated block contains a $1$, if none do set $C\left[\left\lfloor\frac{x}{\sqrt{u}}\right\rfloor\right]=0$, otherwise leave it as 1.
-	\item \lstinline!lookup(x)! - Check if $C\left[\left\lfloor\frac{x}{\sqrt{u}}\right\rfloor\right]\equiv0$ if not, return $\mathtt{false}$. Otherwise check $A[x]$ if it equals 1 then return $\mathtt{true}$, if it equals 0 return $\mathtt{false}$.
-	\item \lstinline!predecessor(x)! Check the values in the same block as $x$ and are less that $x$. If none of those have a value of 1, then return the last element in the previous block where the block has value $C[y]=1$.
-	\item \lstinline!successor(x)! Check the values in the same block as $x$ and are greater than $x$. If none of those have a value of 1, then return the first element in the next block where the block has value $C[y]=1$.
-\end{enumerate}
-Now \lstinline!lookup! \& \lstinline!add! run in $O(1)$ time and \lstinline!delete!, \lstinline!predecessor! and \lstinline!successor! take $O(\sqrt{u})$ time since we may have to check all values in a block.\\
+\proposition{vEB Trees - Blocks}
+Let $S\subset U$ where $U$ is a universe of size $u$.\\
+Let $B_1,\dots,B_{\sqrt{u}}$ be bit vectors of length $\sqrt{u}$ which define sequential blocks of $U$.\\
+Each of these vectors stores the values $\{0,\dots,\sqrt{u}-1\}$. $B_i[j]\equiv1$ iff $x:=j+\sqrt{u}\cdot i$ is in $S$.\\
+Let $C$ be a bit vector of length $\sqrt{u}$ which summaries the blocks $B_1,\dots,B_{\sqrt{u}}$.\\
+We have that $C[i]\equiv1$ iff block $B_i$ is non-empty.\\
+With this set up be can fulfil the oeprations as follows
+\begin{itemize}
+	\item[\lstinline!add(x)!]
+	\begin{enumerate}
+		\item Define $i:=\lfloor x/\sqrt{u}\rfloor$ \& $j:=x-i\cdot\sqrt{u}$.
+		\item Set $B_i[j]=1$ \& $C[i]=1$.
+	\end{enumerate}
+	\item[\lstinline!delete(x)!]
+	\begin{enumerate}
+		\item Define $i:=\lfloor x/\sqrt{u}\rfloor$ \& $j:=x-i\cdot\sqrt{u}$.
+		\item Set $B_i[j]=0$.
+		\item Check if $B_i$ is empty. If so set $C[i]=0$.
+	\end{enumerate}
+	\item[\lstinline!successor(x)!]
+	\begin{enumerate}
+		\item Define $i:=\lfloor x/\sqrt{u}\rfloor$ \& $j:=x-i\cdot\sqrt{u}$.
+		\item Look for successor to $x$ in $B_i$, starting at $B_i[j]$.
+		\item If no successor exists
+		\begin{enumerate}
+			\item Find succesor to $j$ in $C$, starting at $C[j+1]$.
+			\item Return smallest element in that block.
+		\end{enumerate}
+	\end{enumerate}
+\end{itemize}
+\nb In practive the blocks are implemented as a single bit-vector.\\
 
-\proposition{vEB Trees - Recursion}
-Suppose we wishing to store the set $S\subset U$ keys with $u=|U|$.\\
-Let $C$ be a data structure which can store the values $[1,\sqrt{u}]$, this acts as the \textit{Summary} of the next layer ($B_1,\dots,B_{\sqrt{u}}$).\\
-Let $B_1,\dots,B_{\sqrt{u}}$ be data structures, each able to store the values $[1,\sqrt{u}]$.\\
-We condition that $x$ is in $B_i$ if $(x+(i-1)\sqrt{u})\in S$ and $i$ is stored in $C$ if $B[i]$ is non-empty.\\
-We define $C,B_1,\dots,B_{\sqrt{u}}$ recursively st each is a \textit{vEB} tree over the universe $\{1,\dots,\sqrt{u}\}$.
-%TODO
-\begin{enumerate}
-	\item \lstinline!add(x)! $\in O(1)$
-	\begin{enumerate}
-		\item Determine which $B_i$ the elment $x$ belongs in.
-		\item If $B_i$ is empty, add $i$ to $C$.
-		\item Add $x$ to $B_i$.
-	\end{enumerate}
-	\item \lstinline!delete(x)!
-	\item \lstinline!lookup(x)!
-	\item \lstinline!predecessor(x)!
-	\begin{enumerate}
-		\item Determine which $B_i$ the element $x$ belongs in.
-		\item If $x\geq\min(B_i)$:
-		\begin{enumerate}
-			\item Return the \lstinline!predecessor! of $x$ in $B_i$.
-		\end{enumerate}
-		\item If $x<\min(B_i)$:
-		\begin{enumerate}
-			\item Compute $j=$\lstinline!predecessor!(i) in $C$.
-			\item Return the \lstinline!predecessor! of $x$ in $B_j$.
-		\end{enumerate}
-	\end{enumerate}
-	\item \lstinline!successor(x)! 
-\end{enumerate}
-\nb \lstinline!add! \& \lstinline!predecessor! are recusively defined.\\
+\remark{\lstinline!successor(x)! for Blocks Implementation}
+In the block implementation of \textit{vEB Trees} we have $T(u)=3T(\sqrt{u})+O(1)$ as we make 3 recursive calls to \lstinline!successor()!.\\
+This gives time complexity $T(u)\in O(\sqrt{u})$.\\
+We can improve this by reducing the number of recursive calls made.\\
+To do this we restructure the data structure. (See \textbf{Proposition 3.5}).\\
 
 \proposition{vEB Trees - Proper}
-Suppose we wishing to store the set $S\subset U$ keys with $u=|U|$.\\
-In \textit{vEB Trees} we store the minimum \& maximum values in $S$ seperately to the main structure.\\
-Let $C$ be a data structure which can store the values $[1,\sqrt{u}]$, this acts as a \textit{Summary} of $(B_1,\dots,B_{\sqrt{u}})$.\\
-Let $B_1,\dots,B_{\sqrt{u}}$ be data structures which can each store the values $[1,\sqrt{u}]$.\\
-We define $C,B_1,\dots,B_{\sqrt{u}}$ recursively st each is a \textit{vEB} tree over the universe $\{1,\dots,\sqrt{u}\}$.\\
-Note that this means each $B_i$ stores their own min \& max values.\\
-Note that the minimum is note stored in $B_i$ but seperately, as this avoids making multiple recursive calls when performing \lstinline!add!.
+Consider the same set up as in \textbf{Proposition 3.4}.\\
+Here the data structure is augment such that for each block $B_i$ we store the $\mathtt{max}$ and $\mathtt{min}$ indexes used in it.\\
+By doing this we can perform \lstinline!successor(x)! as follows
 \begin{enumerate}
-	\item \lstinline!add(x)!, $O(\log\log u)$.
+	\item Define $i:=\lfloor x/\sqrt{u}\rfloor$ \& $j:=x-i\cdot\sqrt{u}$.
+	\item If $j>\mathtt{max}_i$: \# No successor in block
 	\begin{enumerate}
-		\item If $x<\mathtt{min}$ swap $x$ and $\mathtt{min}$.
-		\item Determine which $B_i$ element $x$ belongs in.
-		\item If $B_i$ is empty perform \lstinline!add(x)! on $C$ and set the $\mathtt{min}$ and $\mathtt{max}$ in $B_i$ to $x$. (Adjusting the offset of $B_i$).
-		\item If $B_i$ is \textbf{not} empty perform \lstinline!add(x)! to $B_i$.
-		\item Update $\mathtt{max}$.
+		\item $k=$\lstinline!$\text{successor}_C(i)$! \# Find block with next value
+		\item return $B_k[\mathtt{min}_k]$
 	\end{enumerate}
-	\item \lstinline!delete(x)!, $O(\log\log u)$.
-	\item \lstinline!lookup(x)!, $O(\log\log u)$.
-	\item \lstinline!predecessor(x)!, $O(\log\log u)$.
-	\item \lstinline!successor(x)!, $O(\log\log u)$.
+	\item Else: \# Successor is in block
+	\begin{enumerate}
+		\item return \lstinline!$\text{successor}_{B_i}(j)$!
+	\end{enumerate}
 \end{enumerate}
+We are now only ever making a single recurisve call, giving us $T(u)=T(\sqrt{u})+O(1)$.\\
+Thus $T(u)\in O(\log\log u)$.\\
+\nb Each block \& summary can be defined recursively.\\
+
+\example{vEB Trees - Proper}
+Consider a universe of size $u=16$.\\
+The following is an example of the datat structure that would be used
+$$C=\begin{pmatrix}1\\0\\0\\1\end{pmatrix}\quad B=\begin{pmatrix}1&0&0&0\\0&0&0&0\\0&0&0&0\\0&1&0&1\end{pmatrix}\quad\mathtt{min}=\begin{pmatrix}0\\-\\-\\1\end{pmatrix}\quad\mathtt{max}=\begin{pmatrix}0\\-\\-\\3\end{pmatrix}$$
+\nb Each row relates to a single block.\\
 
 \remark{Time Complexity of \lstinline!add! for vEB Trees}
 \lstinline!add! contain a single recursive call.\\
@@ -661,9 +655,13 @@ Make a balanced binary tree by recursively taking the midpoint of the array as a
 \lstinline!lookup($l_1,u_1$)! can be performed as follows
 \begin{enumerate}
 	\item Find the successor of $l_1$. Takes $O(\log n)$ time.
-	\item Find the predecessor of $x_2$. Takes $O(\log n)$ time.
-	\item Consider each node on the path between this sucessor \& predecessor. (Path has length $O(\log n)$.\\
-	These subtrees have the property that either \underline{all} points in the tree have $x$ values in the range $[l_x,u_x]$, or \underline{none} of them do.
+	\item Find the predecessor of $u_1$. Takes $O(\log n)$ time.
+	\item Find the path between the successor and predecessor.
+	\item For each node on path:
+	\begin{enumerate}
+		\item Consider its left \& right subtree in turn (if they exist).
+		\item If root of subtree is in $[l_1,u_1]$ then return all values in subtree.
+	\end{enumerate}
 \end{enumerate}
 This implementation of \lstinline!lookup($l_1,u_1$)! takes $O(\log n+k)$ time, where $k$ is the number of points to be returned, and $O(n)$ space and $O(n\log n)$ prep-time (to construct the tree).\\
 \nb Runtime depends on the size of the output.\\
@@ -679,7 +677,7 @@ This approach has run time $O(\log n+k_x)+O(\log n+k_y)+O(k_x+k_y)=O(n+k_x+k_y)$
 
 \proposition{$2D$ Range Searching Data Structure - Proper}
 For preprocessing build a balanced binary tree using the $x$ value of each point.\\
-Here is a better implementation of \lstinline!lookup(1x,ux,ly,uy)!.
+Here is a better implementation of \lstinline!lookup($1_x,u_x,l_y,u_y$)!.
 \begin{enumerate}
 	\item Find the successor to $l_x$.
 	\item Find the predeccessor to $u_x$.
@@ -688,7 +686,7 @@ Here is a better implementation of \lstinline!lookup(1x,ux,ly,uy)!.
 	\item For each subtree where \underline{all} points have $x$ values in the range $[l_x,u_x]$.
 	\begin{enumerate}
 		\item Build a \textit{1D Range Searching Structure} using the $y$-coordinates of each point in the tree.
-		\item Perform \lstinline!lookup(ly,uy)! on this subtree.
+		\item Perform \lstinline!lookup($l_y,u_y$)! on this subtree.
 	\end{enumerate}
 \end{enumerate}
 
@@ -696,7 +694,7 @@ Here is a better implementation of \lstinline!lookup(1x,ux,ly,uy)!.
 Steps $i)-iii)$ take $O(\log n)$ time and the length of the path between the successor \& predecessor is of length $O(\log n)$.\\
 In step $iv)$ we do $O(\log n)$ 1-D lookups. Each of these takes $O(\log n+k')$ time.\\
 Thus the overall run-time is $O(log^2n+k)$ as each lookup is disjoint.\\
-\nb Preprocessing takes $O(n\log n)$ time.
+\nb Preprocessing takes $O(n\log n)$ time.\\
 
 \remark{Space Complexity \textbf{Proposition 4.3}}
 The initial 1D structure used $O(n)$ space.\\
