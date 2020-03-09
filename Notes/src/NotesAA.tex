@@ -702,6 +702,169 @@ At each node we stored an array containing the points in its subtree.\\
 The tree has depth $O(\log n)$.\\
 Thus the total space used is $O(n\log n)$.
 
+\section{Pattern Matching}
+
+\definition{Exact Pattern Matching Problem}
+Let $T,P$ be strings of length $n,m$ respectively.\\
+The \textit{Exact Pattern Matching Problem} is to find all occurences of $P$ in $T$.\\
+$P$ matches at location $i$ iff $\forall\ j\in[0,m)\ P[j]=T[i+j]$.
+
+\proposition{Na\"ive Algorithm}
+A \textit{Na\"ive Algorithm} for solving the \textit{Exact Pattern Matching Problem} is to align $P$ with the start of $T$; compare every character; return if a match has occured; slide on by one character; repeat until end of $T$ is reached.\\
+\nb This takes $O(nm)$ time.\\
+
+\proposition{Proper Algorithms}
+Proper Algorithms can solve the \textit{Exact Pattern Matching Problem} (\eg KMP) in $O(n)$ time.\\
+Note that this mean run times depends on the size of the text being analysed, not on the pattern which is being searched for.\\
+
+\remark{Preprocessing}
+Since the text, $T$, is constant across all queries, it is acceptable to do a significant amount of preprocessing in order to speed up query times.
+
+\subsection{Suffix Trees}
+
+\definition{Suffix}
+A \textit{Suffix} is any substring of a string which includes the last character.\\
+
+\definition{Atomic Suffix Tree}
+An \textit{Atomic Suffix Tree} is a tree where each edge is a labled by a character \& each leaf is labelled with the index at which a given suffix starts.\\
+Each root-to-leaf path is a suffix in the tree.\\
+
+\example{Atomic Suffix Tree}
+Below is an \textit{Atomic Suffix Tree} for `bananas'.
+\begin{center}\includegraphics[scale=.5]{img/atomic_suffix_tree.png}\end{center}
+
+\proposition{Searching a Atomic Suffix Tree}
+We can use an \textit{Atomic Suffix Tree} to solve the \textit{Exact Pattern Matching Problem}.\\
+Given an pattern $P$, starting at the root, step down the path dictated by $P$.\\
+If $P$ requires a step which cannot be fulfilled then that pattern does not exist anywhere in $T$.\\
+If the path of $P$ does terminate successfully on a node: return all the leaf values in this nodes subtree.\\
+
+\remark{Runtime}
+This approach has runtime complexity of $O(m)$.\\
+It should be noted that the number of choices we have to check at each node does affect the runtime, however for constant size alphabets this is not of great concern.\\
+
+\remark{Limitations of Atomic Suffix Tree}
+\textit{Suffix Trees} can have upto $\left(\frac{n}2+1\right)^2$ internal nodes, meaning its space requirements are $O(n^2)$ are quickly become unmanageable.\\
+They can contain long paths.\\
+
+\definition{Compacted Suffix Tree}
+A \textit{Compacted Suffix Tree} has the same structure as an \textit{Atomic Suffix Tree}, the only difference being that any non-branching nodes (\ie nodes with only one child) are merged into the node below and edges are now labelled with Substrings.\\
+This means that every node has at least $2$ children and we have $O(n)$ edges.\\
+\nb In practice we do not store the substring for each edge but rather the endpoints in $T$ in order to save space.\\
+
+\example{Compact Suffix Tree}
+Below is an \textit{Compact Suffix Tree} for `bananas'.
+\begin{center}\includegraphics[scale=.5]{img/compact_suffix_tree.png}\end{center}
+
+\proposition{A Compact Suffix Tree does \textbf{not} always exist}
+A complete \textit{Compact Suffix Tree} does not always exist.\\
+Suppose $T=$`$bb$' then the tree would contain a single edge and we would not successfully detect the pattern $P=$`$b$'.\\
+This can be fixed by adding a character which does not appear in $T$ onto the end (\eg $T=$`$bb\$$').
+
+\proposition{Searching a Compact Suffix Tree}
+Same process as for an \textit{Aromic Suffix Tree} except we are comparing multiple characters at a time.\\
+Run time is $O(m+\#\text{occurences})$.\\
+
+\propositionn{Constructing a Compact Suffix Tree - Na\"ive}
+\begin{enumerate}
+	\item Insert the suffixes one at a time, longest to shortest:
+	\begin{enumerate}
+		\item Search for the new suffix in the partial suffix tree.\\
+		(Same technique as pattern matching).
+		\item Add a new edge and leaf for the new suffix.\\
+		This may require the breaking of an edge into two.
+	\end{enumerate}
+\end{enumerate}
+This has run-time complexity $O(n^2)$.\\
+\nb This can be done in $O(n)$ time but is not covered on this course.\\
+
+\proposition{Multiples Texts}
+If we want to be able to search multiple texts we a character to the end of each text: this characters must be different \& not appear in any of the texts.\\
+We then append these texts and treat them as a single text.
+
+\subsection{Suffix Arrays}
+
+\definition{Lexicographical Sorting}
+\textit{Lexicographical Sorting} is a way of ordering words in alphabetical order.\\
+Let $T_1$ and $T_2$ be two texts which we are sorting.
+\begin{itemize}
+	\item Compare $T_1$ \& $T_2$ character-by-character.
+	\item Let $i$ be the index of the first character to differ between $T_1$ \& $T_2$.
+	\item If $T_1[i]<T_2[i]$ alphabetically (or any order defined ordering) then $T_1$ is placed first, and visa-versa.
+	\item If no characters differ but $T_1$ is shorter than $T_2$, then $T_1$ is placed first and visa-versa.
+\end{itemize}
+\nb This is how words are sorted in the dictionary.\\
+
+\definition{Suffix Array}
+Let $T$ be a text with $|T|=n$.\\
+Lexicographic sort all $n$ suffices of $T$.\\
+We define a \textit{Suffix Array}, $A$, st
+$$A[i]=n-\text{length of suffix with was }i^\text{th}\text{ in lexicographic order}$$
+
+\example{Suffix Array}
+Consider the word \textit{`bananas'}.
+\begin{center}
+\begin{tabular}{|r|l|}
+\hline
+$n-l$&\textbf{suffix}\\\hline
+0&bananas\\
+1&ananas\\
+2&nanas\\
+3&anas\\
+4&nas\\
+5&as\\
+6&s\\
+\hline
+\end{tabular}\quad
+\begin{tabular}{|r|l|}
+\hline
+$n-l$&\textbf{suffix}\\\hline
+\hline
+1&ananas\\
+3&anas\\
+5&as\\
+0&bananas\\
+2&nanas\\
+4&nas\\
+6&s\\
+\hline
+\end{tabular}
+\end{center}
+Thus, in this case, $A=[1,3,5,0,2,4,6]$.\\
+
+\remark{Suffix arrays are much smaller than Suffix Trees}
+
+\proposition{Suffix Array from Suffix Tree}
+If we already have a \textit{Suffix Tree} constructed then we can construct a \textit{Suffix Array} by performing a depth first search on the tree and setting $A[i]$ to be the $i^\text{th}$ element to be returned by this search.\\
+\nb Depth first search can be done in $O(n)$ time.\\
+
+\proposition{Searching a Suffix Array}
+Let $T$ be a text we wish to search and $P$ be the pattern we are looking for.\\
+Let $A$ be the \textit{Suffix Array} of $T$.\\
+Due $A$ being ordered (lexicographically) we can perform a binary search on it to find occurences of $P$.\\
+At each node we check we compare characters: if $P$ is matched completly then we can return the index of the occurence. Regardless we continue with the binary search until it is complete.\\
+
+\remark{Runtime Seaching a Suffix Tree}
+Comparing two strings takes $O(m)$ (where $|P|=m$) and the binary search checks $O(\log n)$ nodes (where $|T|=n$).\\
+Thus overall runtime complexity for finding one occurence is $O(m\log n)$ and to find \underline{all} occurences is $O(m\log n+\#\text{occurences})$.\\
+\nb This can be improved to $O(m+\log n+\#\text{occurences})$ using \textit{LCP Queries}, which are discussed later.\\
+
+\proposition{DC3 Method}
+The \textit{DC3 Method} is a method for building \textit{Suffix Arrays}.\\
+\begin{enumerate}
+	\item Let $T$ be a text of length $n$, $B_1:=\{i\in[0,n):i\mod 3=1\}$ \& $B_2:=\{i\in[0,n):i\mod 3=2\}$.
+	\item Define string $R_1$ to be the substring $T[1,n)$ and append filler characters, $\$$, st $|R_1|$ is a multiple of 3.
+	\item Define string $R_2$ to be the substring $T[2,n)$ and append filler characters, $\$$, st $|R_1|$ is a multiple of 3.
+	\item Concatenate $R_1$ and $R_2$ to obtain $R$.
+	\item Split $R$ into blocks of size 3 and order them lexicographically (with filler character < `a').\\
+	\nb This takes $O(n)$ time using radix sort.
+	\item Define $R'$ st $R'[i]:=\text{lexicographic position of block }i\text{ in R}$.\\
+	\nb $|R'|=\frac{2n}3$.
+	\item Compute the \textit{Suffix Array} of $R'$.	
+\end{enumerate}
+Using
+%TODO
+
 \newpage
 \setcounter{section}{-1}
 \section{Reference}
