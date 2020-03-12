@@ -842,7 +842,8 @@ If we already have a \textit{Suffix Tree} constructed then we can construct a \t
 Let $T$ be a text we wish to search and $P$ be the pattern we are looking for.\\
 Let $A$ be the \textit{Suffix Array} of $T$.\\
 Due $A$ being ordered (lexicographically) we can perform a binary search on it to find occurences of $P$.\\
-At each node we check we compare characters: if $P$ is matched completly then we can return the index of the occurence. Regardless we continue with the binary search until it is complete.\\
+At each node we check we compare characters: if $P$ is matched completly then we can return the index of the occurence.\\
+\nb Binary search can be used to find the first \& last occurence of $P$ and thus all occurences.\\
 
 \remark{Runtime Seaching a Suffix Tree}
 Comparing two strings takes $O(m)$ (where $|P|=m$) and the binary search checks $O(\log n)$ nodes (where $|T|=n$).\\
@@ -850,20 +851,59 @@ Thus overall runtime complexity for finding one occurence is $O(m\log n)$ and to
 \nb This can be improved to $O(m+\log n+\#\text{occurences})$ using \textit{LCP Queries}, which are discussed later.\\
 
 \proposition{DC3 Method}
-The \textit{DC3 Method} is a method for building \textit{Suffix Arrays}.\\
+Let $T$ be a text with $n=|T|$.\\
+The \textit{DC3 Method} is an algoirthm for building \textit{Suffix Arrays} in $O(n)$.\\
+First we build a \textit{Suffix Array} for two-thirds of the text \& then for the final third.
 \begin{enumerate}
-	\item Let $T$ be a text of length $n$, $B_1:=\{i\in[0,n):i\mod 3=1\}$ \& $B_2:=\{i\in[0,n):i\mod 3=2\}$.
-	\item Define string $R_1$ to be the substring $T[1,n)$ and append filler characters, $\$$, st $|R_1|$ is a multiple of 3.
-	\item Define string $R_2$ to be the substring $T[2,n)$ and append filler characters, $\$$, st $|R_1|$ is a multiple of 3.
-	\item Concatenate $R_1$ and $R_2$ to obtain $R$.
-	\item Split $R$ into blocks of size 3 and order them lexicographically (with filler character < `a').\\
-	\nb This takes $O(n)$ time using radix sort.
-	\item Define $R'$ st $R'[i]:=\text{lexicographic position of block }i\text{ in R}$.\\
-	\nb $|R'|=\frac{2n}3$.
-	\item Compute the \textit{Suffix Array} of $R'$.	
+	\item Construct \textit{Suffix Array} for two-thirds ($S_{1,2}$):
+	\begin{enumerate}
+		\item Define $B_1:=\{i\in[0,n):i\ \%\ 3\equiv1\}$ \& $B_2:=\{i\in[0,n):i\ \%\ 3\equiv2\}$.
+		\item Define $R_1:=T[1,\dots,n]$ \& $R_1:=T[2,\dots,n]$.
+		\item Pad the ends of $R_1$ \& $R_2$ with a filler character (`\$') until their length is a multiple of 3.
+		\item Split $R_1$ \& $R_2$ into blocks of length 3.
+		\item Define $R:=R_1*R_2$ (Concatenation) \& split it into blocks of length 3.
+		\item Label the blocks of $R$ in lexicographical order. (Takes $O(n)$ time with Radix Sort).
+		\item Define $R'$ st $R'[i]=$ position of block $i$ in lexicographical order. (\nb $|R'|=\frac{2n}{3}$)
+		\item Compute the \textit{Suffix Array} of $R'$.\\
+		\nb This is a recursive step \& we are now sorting number suffices rather than letter suffices.
+	\end{enumerate}
+	\item Relabel the \textit{Suffix Array} of $R'$ in terms of first index (in $T$) of each block. (Call this $S_{1,2}$)\\
+	\nb This gives the \textit{Suffix Array} of $B_1\cup B_2$.
+	\item Construct \textit{Suffix Array} for other third ($S_0$):
+	\begin{enumerate}
+		\item Define $B_0:=\{i\in[0,n):i\ \%\ 3\equiv0\}$.
+		\item Write each suffix which is indexed by $B_0$ as the first character \& the position of the suffix started by the next character in $S_{1,2}$.
+		$$\underbrace{T[B_0[i]]}_\text{char}+\mathtt{index\_of}(B_0[i]+1\mathtt{\ in\ }S_{1,2})\equiv T[B_0[i]]+\mathtt{index\_of}(B_1[i]\mathtt{\ in\ }S_{1,2})$$
+		\item Sort these pairs lexicographically ($O(n)$ time in Radix Sort).\\
+		\item Relabel this array in terms of the index of the first character (in $T$). (Call this $S_0$).\\
+		\nb This is the \textit{Suffix Array} of $B_0$.
+	\end{enumerate}
+	\item Merge the \textit{Suffix Array}s to form $S$:
+	\begin{enumerate}
+		\item Set $i=0$ and $j=0$.
+		\item Compare $S_0[i]$ with $S_{1,2}[j]$:
+		\begin{itemize}
+			\item[\textbf{If}] $(T[S_0[i]]<T[S_{1,21}[j]])$: Insert $S_0[i]$ into $S$, increment $i$.
+			\item[\textbf{Elif}] $(T[S_0[i]]>T[S_{1,2}[j]])$: Insert $S_{1,2}[j]$ into $S$, increment $j$.
+			\item[\textbf{Else}]: (\ie $T[S_0[i]]\equiv T[S_{1,2}[j]]$)
+			\begin{itemize}
+				\item[\textbf{If}] $S_0[i]+1\in S_{1,2}$ \underline{and} $S_{1,2}[j]+1\in S_{1,2}$:
+				\item Add the element associated to whichever of these indices occurs first in $S_{1,2}$. Increment $i$ or $j$ as appropriate.
+				\item[\textbf{Else}] \text{Add the element associated to whichever of $S_0[i]+2$ \& $S_{1,2}[j]+2$ occurs first in $S_{1,2}$.} Increment $i$ or $j$ as appropriate.\\
+				\nb These indicies are guaranteed to be in $S_{1,2}$ due to the use of $mod\ 3$.
+				
+			\end{itemize}
+		\end{itemize}
+		\item Repeat until all characters have been positioned.\\
+		\nb This is very similar to \textit{Merge-Sort Merging}.
+	\end{enumerate}
 \end{enumerate}
-Using
-%TODO
+
+\proposition{DC3 Method - Run Time}
+In the \textit{DC3 Method} we have a recursive step at i) (h) which acts of two-thirds of the data.\\
+The construction of $S_0$ takes $O(n)$ time as it uses \textit{Radix Sorting}.\\
+The merging of $S_0$ \& $S_{1,2}$ takes $O(n)$ time.\\
+Thus the \textit{DC3 Method} has run-time equation $T(n)=T\left(\frac{2}{3}n\right)+O(n)\implies T(n)\in O(n)$.
 
 \newpage
 \setcounter{section}{-1}
