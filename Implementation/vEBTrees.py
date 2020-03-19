@@ -123,9 +123,9 @@ class vEB_Tree_Recursive(Abstract_Van_Emde_Boas_Tree):
     def __init__(self,u:int): # u=size of universe
         self.u=u
         self.sqrt_u=int(u**.5)
-        if u<=2: # leaf
-            self.t=[0]*u # bit array
-        else: # node
+        self.min=None
+        self.max=None
+        if u>2: # leaf
             temp=self.sqrt_u**2
             size=self.sqrt_u
             while(temp<self.u):
@@ -133,47 +133,25 @@ class vEB_Tree_Recursive(Abstract_Van_Emde_Boas_Tree):
                 temp+=self.sqrt_u
             self.c=[0]*size
             self.t=[vEB_Tree_Recursive(self.sqrt_u) for i in range(size)]
+        es
 
     # Insert value
     def add(self,value:int)->bool:
-        if (value<0 or value>=self.u): return False # Out of universe
+        if self.min==None or value<self.min:
+            temp=value
+            value=self.min
+            self.min=temp
         block=int(value/self.sqrt_u)
-        index=value-self.sqrt_u*block
-        if isinstance(self.t[0],int): # leaf of tree
-            self.t[index]=1
-            return True
-        else: # node in tree
-            self.c[block]=1 # update summary
-            return self.t[block].add(index) # insert to sub tree
+        if (self.c[block]==0)
+
 
     # Delete value
     def delete(self,value:int)->bool:
-        if (value<0 or value>=self.u): return False # out of universe
-        block=int(value/self.sqrt_u)
-        index=value-self.sqrt_u*block
-        if isinstance(self.t[0],int): # leaf of tree
-            self.t[index]=0
-            return True
-        else: # node of tree
-            if self.c[block]==0: # don't progress any further
-                return True
-            else:
-                res=self.t[block].delete(index)
-                if (res and self.t[block].__is_empty()):
-                    self.c[block]=0
-                return res
+        pass
 
     # Return whether a value is in the structure
     def lookup(self,value:int)->bool:
-        if (value<0 or value>=self.u): return False # out of universe
-        block=int(value/self.sqrt_u)
-        index=value-self.sqrt_u*block
-        if isinstance(self.t[0],int): # Leaf of tree
-            return self.t[index]==1
-        else:
-            if (self.c[block]==0): return False
-            else:
-                return self.t[block].lookup(index)
+        pass
 
     # return the largest x in T st x<=value
     def predecessor(self,value:int)->int:
@@ -196,22 +174,17 @@ class vEB_Tree_Recursive(Abstract_Van_Emde_Boas_Tree):
                 b&=self.t[i].__is_empty()
             return b # true if all
 
-
     def __str__(self):
-        if isinstance(self.t[0],int): # Leaf of tree (ie just bit array)
-            return "Leaf({}) - [{}]".format(self.u,",".join([str(i) for i in self.t]))
-        else:
+        if hasattr(self,"t"): # Leaf of tree (ie just bit array)
             string="Node({}) - Summary [{}]\n".format(self.u,",".join([str(i) for i in self.c]))
             for t in self.t:
                 string+="    {}\n".format(str(t))
             return string
+        else:
+            return "min:{}, max:{}".format(self.min,self.max)
 
 if __name__=="__main__":
     tree=vEB_Tree_Recursive(9)
-    tree.add(1)
-    tree.add(4)
     tree.add(8)
-    print(tree)
-    tree.delete(1)
-    tree.delete(2)
+    tree.add(4)
     print(tree)

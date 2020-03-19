@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper]{article}
+ \documentclass[11pt,a4paper]{article}
 
 \usepackage[margin=1in, paperwidth=8.3in, paperheight=11.7in]{geometry}
 \usepackage[ruled, vlined, linesnumbered]{algorithm2e}
@@ -905,6 +905,617 @@ The construction of $S_0$ takes $O(n)$ time as it uses \textit{Radix Sorting}.\\
 The merging of $S_0$ \& $S_{1,2}$ takes $O(n)$ time.\\
 Thus the \textit{DC3 Method} has run-time equation $T(n)=T\left(\frac{2}{3}n\right)+O(n)\implies T(n)\in O(n)$.
 
+\section{Range Minimum Queries}
+
+\definition{Range Minimum Query Problem}
+Let $A$ be an array of length $n$ and $i,j\in[0,n)$ with $i<j$.\\
+A \textit{Range Minimum Query} of indices $i,j$, $RMQ(i,j)$, outputs the index of the samllest value in the subarray $A[i,j]\equiv\big\{A[i],A[i+1],\dots,A[j-1],A[j]\big\}$.\\
+
+\remark{Aim}
+This can be na\"ively be done in $O(n^2)$ space \& $O(1)$ query time if we precompute a matrix of all solutions.\\
+We want to do this in $O(n)$ space, $O(n)$ preprocessing time \& $O(1)$ query time.\\
+
+\proposition{Solution 1 - Block Decomposition}
+Let $A$ be an array of $n$ elements.\\
+The \textit{Block Decomposition Solution} suggests preprocessing a \textit{Minimum Binary-Heap} where each node gives the value \& index of the smallest value of the leaves in its subtree.
+\begin{enumerate}
+	\item Define $A_1:=A$.
+	\item For $i\in[1,\log_2n]$:
+	\begin{enumerate}
+		\item Let $k:=2^i$.
+		\item Define $A_k$ st $\forall\ i\in[0,\frac{n}k],\ A_k[i]=(x,v)$ where $v:=\min(A[ik,(i+1)k])$ and $x$ is the position of $v$ in $A$.
+	\end{enumerate}
+\end{enumerate}
+This takes $O(n)$ space since $\sum_{i=0}^\infty\frac{n}{2^i}=2n$.\\
+Each layer requires $\frac{n}k$ comparisons, thus preprocessing takes $O(n)$ time.\\
+
+\proposition{Solution 1 - Querying}
+Consider performing $RMQ(i,j)$ using the heap produced by \textbf{Proposition 6.1}
+\begin{enumerate}
+	\item Find the largest block which lies completely within $[i,j]$.\\
+	\ie The node with the largest subtree which lies completely in the $[i,j]$.
+	\item Keep finding the largest block which does not overlap with any previous blocks.\\
+	\item Return the minimum of root of each of these blocks.
+\end{enumerate}
+We will never choose 2 consequitive blocks of the same height as there will be a large block with covers them.\\
+There will be no gaps in a layer (for the same reason), thus we choose at most $2$ blocks of each height.\\
+Thus we pick at query at most $2\log_2n$ blocks in total.\\
+Query time is $O(\log_2n)$.\\
+
+\remark{We want faster queries}
+
+\proposition{Solution 2 - Precompute solutions for intervals of length power of two}
+Let $A$ be an array of $n$ elements.\\
+Pre-compute the solutions for every interval of length $2^i$ for some $i$.
+Let $A_k$ denote the array which stores the solutions to $RMQ(i,i+(k-1))\ \forall\ i$, where $k$ is a power of 2.\\
+\nb $A_1:=A$.\\
+$|A_k|=n-(k-1)\in O(n)$ and we have $\log_2n$ arrays so total space is $O(n\log_2n)$.\\
+We can build $A_2$ from $A$ in $O(n)$ time \& $A_{2k}$ from $A_k$ in $O(n)$ so pre-processing takes $O(n\log_2n)$.\\
+
+\proposition{Solution 2 - Querying}
+Consider performing $RMQ(i,j)$ using the arrays produced by \textbf{Proposition 6.3}.
+\begin{enumerate}
+	\item Define $l:=j-i+1$ (The interval length).
+	\item If $l$ is a power of $2$: Return $A_{l}[i]$. (\ie Just lookup the answer).\\
+	\nb Takes $O(1)$ time.
+	\item Otherwise:
+	\begin{enumerate}
+		\item Find power of two, $k$, st $k\leq l<2k$.
+		\item Perform $RMQ(i,i+k-1)$ and $RMQ(j-k+1,j)$.\\
+		\nb Each query takes $O(1)$ time.
+		\item Return minimum of these two queries.\\
+		\nb Takes $O(1)$ time.
+	\end{enumerate}
+\end{enumerate}
+Each query can be done in $O(1)$ time.\\
+
+\remark{Solution 2 has quicker queries but requires more space \& pre-processing time}
+
+\proposition{Solution 3 - Low-Resolution Range Minimum Queries}
+Let $A$ be an array of $n$ elements.\\
+Here we replace $A$ with a \textit{lower-resolution} array $H$ and store many smaller arrays which give the detail.
+\begin{enumerate}
+	\item Define $\tilde{n}:=\dfrac{n}{\log_2n}$.
+	\item Define $H[i]=\min(A[i\log_2n,(i+1)\log_2n-1])$ for $i\in[0,\tilde{n})$.
+	\item Define sub-arrays $L_i:=A[i\log_2n,(i+1)\log_2n-1]$ for $i\in[0,\tilde{n})$.\\
+	\nb In practice we just store the start \& end indices of $L_i$ and then query $A$.
+\end{enumerate}
+We can use \textbf{Proposition 6.3} to construct $H$.\\
+This requires $O(\tilde{n}\log_2\tilde{n})=O(n)$ space \& pre-processing time, and we can perform queries in $O(1)$ time.\\
+Using \textbf{Proposition 6.3} to construct each of the $L_i$ requires $O((\log_2n)\log_2\log_2n)$ space \& pre-processing time, and each can be queried in $O(1)$ time.\\
+Thus, total space is $O(n)+O(\tilde{n}(\log_2n)\log_2\log_2n)=O(n\log_2\log_2n)$ \& total pre-processing time is $O(n\log_2\log_2n)$.\\
+
+\proposition{Solution 3 - Querying}
+Consider performing $RMQ(i,j)$ using the arrays produced by \textbf{Proposition 6.5}.
+\begin{enumerate}
+	\item Define $i':=\left\lceil\frac{i}{\log_2n}\right\rceil$ \& $j':=\left\lfloor\frac{j}{\log_2n}\right\rfloor$.
+	\item Query $RMQ_H(i',j')$.
+	\item If $i'\neq\frac{i}{\log_2n}$: (\ie the previous query does not cover the start of the interval)
+	\begin{itemize}
+		\item Query $RMQ_{L_{i'-1}}(i'-i,\log_2n)$.
+	\end{itemize}
+	\item If $j'\neq\frac{j}{\log_2n}$: (\ie the previous query does not cover the end of the interval)
+	\begin{itemize}
+		\item Query $RMQ_{L_{j'+1}}(0,j-j')$.
+	\end{itemize}
+	\item Return the minimum of these (at most 3) queries.
+\end{enumerate}
+This requires at most 3 queries, each of $O(1)$ time, so can be done in $O(1)$ time.
+
+\subsection{$\pm1$ Range Minimum Queries}
+
+\definition{$\pm1$ Range Minimum Query}
+Let $A$ be an array of length $n$ with the property that $\forall\ k\in[0,n-1),\ A[k+1]=A[k]\pm1$.\\
+Perform a \textit{Range Minimum Query} of this array.\\
+
+\definition{Equivalent $\pm1$ Arrays}
+Let $A_1$ \& $A_2$ be $\pm1$ arrays of length $n$.\\
+\text{We note that the values of each index are irrelevant, \underline{only} the change in value between elements matters.}\\
+Thus, $A_1$ \& $A_2$ are said to be \textit{Equivalent} if they have the same pattern of value changes.\\
+\ie $A_1$ is equivalent to $A_2$ iff $\forall\ i,j\ RMQ_{A_1}(i,j)=RMQ_{A_2}(i,j)$.\\
+
+\proposition{Number of Equivalent $\pm1$ Arrays}
+Consider $\pm1$ arrays of length $n$.\\
+We can denote the value change pattern of a $\pm1$ array as a binary string of length $n-1$ where the $i^\text{th}$ digit represents the value change from $A[i]$ to $A[i+1]$.\\
+Let 1 denote $+1$ and 0 denote $-1$.\\
+Thus there are $2^{n-1}$ unique $\pm1$ arrays of length $n$.\\
+
+\proposition{Range Minimum Queries for $\pm1$ Arrays}
+Let $A$ be a $\pm1$ array of length $n$.\\
+Split $A$ into $\tilde{n}:=2\frac{n}{\log_2n}$ blocks.\\
+\text{Each block is of length $n\frac{\log_2n}{2n}=\frac12\log_2n$ and is a $\pm1$ array, thus there are at most $\sqrt{n}$ different blocks}.\\
+Precompute the \textit{Range Minimum Query} of each permutation \& store in a table.\\
+Store type of each block in a \textit{Low-Resolution} array, $H$.\\
+Querying requires a single query of $H$ \& a single query of the precomputed table of solutions.\\
+Both take $O(1)$ time, so query time is $O(1)$.\\
+This requires $O(n)$ space \& pre-processing time.\\
+\nb This is similar to the \textit{Low-Resolution} solution given in \textbf{Proposition 6.5}.
+
+\section{Lowest Common Ancestor}
+
+\definition{Ancestor}
+Let $T$ be a tree \& $i$ be a node in $T$.\\
+\textit{Ancestors} of $i$ in $T$ are the nodes which lie on the path from $i$ to the tree-root.\\
+
+\definition{Lowest Common Ancestor}
+Let $T$ be a tree \& $i,j$ be nodes in $T$.\\
+The \textit{Lowest Common Ancestor} of $i$ \& $j$ in $T$, $LCA(i,j)$, is the node furthest from the root which is also an ancestor of \underline{both} $i$ \& $j$.\\
+
+\remark{Aim}
+We want to find a solution which works in $O(n)$ space, $O(n)$ pre-processing time \& $O(1)$ query time.\\
+
+\definition{Euler Tour}
+Let $T$ be a \textit{Tree}.\\
+An \textit{Eurler Tour} of $T$ is a depth-first search, where we record backtracking as well.\\
+At each node take the leftmost edge which has not already been traversed, otherwise backtrack \& repeat until all edges have been traversed.\\
+
+\proposition{Length of Euler Tour}
+Let $T$ be a \textit{Tree} with $n$ nodes.\\
+Since $T$ has $n$ nodes, it has $n-1$ edges.\\
+In an \textit{Euler Tour} each edge is traversed twice (once in each direction) \& trivially start at the root.\\
+Thus an \textit{Euler Tour} has length $2(n-1)+1=2n-1$.\\
+
+\remark{Euler Tours start \& end on the root of the tree}
+
+\proposition{Solution 1 - Using Range Minimum Queries}
+Let $T$ be a tree with $n$ nodes \& $i,j$ be nodes in $T$.
+\begin{enumerate}
+	\item Label each node of the tree incrementally with $[0,n-1]$ (left-to-right, then down a layer).
+	\item Follow an \textit{Euler Tour} of $T$. At each node:
+	\begin{itemize}
+		\item[-] Append its value on the end of $N$.
+		\item[-] Append its depth on the end of $D$.
+	\end{itemize}
+	\item Process $D$ for \textit{Range Minimum Queries} (Using \textbf{Proposition 6.5}).
+\end{enumerate}
+This produces two arrays, $N$ \& $D$, each of length $2n-1$.\\
+Using \textbf{Proposition 6.5} for iii) means that pre-processing time \& total-space is
+$$\underbrace{O(n\log_2\log_2n)}_\text{RMQs}+\underbrace{O(n)}_\text{Euler Tour}=O(n\log_2\log_2n)$$
+
+\proposition{Solution 1 - Quering}
+Let $T$ be a \textit{Tree} with $n$ nodes and $i,j$ be nodes in $T$.\\
+Let $N$ \& $D$ be the arrays produced by \textbf{Proposition 7.2}.\\
+Consider making query $LCA(i,j)$ on $T$.
+\begin{enumerate}
+	\item Find an occurence of $i$ \& $j$ in $N$.
+	\item Let $i',j'$ be the indixes of these occurences.
+	\item Return $N[\underbrace{RMQ_D(i',j')}_\text{An Index}]$.\\
+	\nb $RMQ(\cdot,\cdot)$ takes $O(1)$ time.
+\end{enumerate}
+Each of these steps takes $O(1)$ time. Overall query-time is $O(1)$.\\
+
+\proposition{Correctness of Solution 1}
+Consider \textit{Euler Tours} recursively.\\
+Let $x$ be a node at depth $x$ with children $c_1,\dots,c_k$.\\
+We see the \textit{Euler Tour} has recursive structure as
+\begin{center}
+\begin{tabular}{c|c|c|c|c|c|c|c|}
+\cline{2-8}
+N&x&$\vdash$Tour of $c_1\dashv$&x&$\vdash\dots\dashv$&x&$\vdash$Tour of $c_k\dashv$&x\\
+\cline{2-8}
+D&d&$\vdash$Tour of $c_1\dashv$&d&$\vdash\dots\dashv$&d&$\vdash$Tour of $c_k\dashv$&d\\
+\cline{2-8}
+\end{tabular}
+\end{center}
+Claim that $RMQ(i,j)=y$ iff $LCA(i,j)=y$.\\
+Let $i',j'$ be any position of $i,j$ in $N$.
+\begin{enumerate}
+	\item Suppose $i,j$ are in the same subtree of $y$.\\
+	Then $y$ is not in interval $i',j'$.\\
+	Thus cannot be returned by $RMQ(i,j)$.
+	\item Suppose $i,j$ are not in subtrees of $y$.\\
+	Then $y$ may be in the interval $i',j'$.\\
+	Since theses are not subtrees of $y$ then a node higher than $y$ will be traversed.\\
+	The index of this node will be returned by $RMQ(i,j)$ over that of $y$.
+	\item Suppose $i,j$ are in different subtrees of $y$.\\
+	Then $y$ is in the interval $i',j'$.\\
+	Since these are both subtrees of $y$, $y$ is the highest element in the trees.\\
+	Thus the index of $y$ is returned by $RMQ(i,j)$.
+\end{enumerate}
+Thus the claim holds.\proved
+
+\proposition{Solution 2 - $\pm1$ Range Minimum Query}
+Notice that the depth array, $D$, produced by \textbf{Proposition 7.2} is a $\pm1$ array.\\
+Thus we can use the results from \textbf{Section 6.1}.\\
+Specifically, replace $D$ with a \textit{Low-Resolution} array as described in \textbf{Proposition 6.8}.\\
+Query time remains as $O(1)$.\\
+Pre-processing time \& total space is now $\underbrace{O(n)}_\text{RMQs}+\underbrace{O(n)}_\text{Euler Tour}=O(n)$.\\
+This fulfils the aims in \textbf{Remark 7.1}.
+
+\subsection{Solving Range Minimum Queries using Leach Common Ancestor}
+
+\definition{Cartesian Tree}
+Let $A$ be an array.\\
+The \textit{Cartesian Tree} of is defined recursively
+\begin{enumerate}
+	\item Set $\min(A)$ as root.
+	\item Partition $A$ around $\min(A)$ into $A_1$ \& $A_2$.
+	\item Repeat for $A_1$ \& $A_2$, making the resulting trees subtrees.
+\end{enumerate}
+\nb This can be done in $O(n)$, but not covered.\\
+
+\remark{$LCA(i,j)$ in the cartesian tree of $A\equiv RMQ_A(i,j)$}
+This gives $O(n)$ space \& pre-processing time, and $O(1)$ query time for the \textit{Range Minimum Query} problem, using the solution to \textit{Least Common Ancestors} in \textbf{Proposition 7.5}.
+
+\section{Approximation Algorithms}
+
+\remark{Look at NP-Completeness}
+
+\definition{Approximation Algorithm}
+Let $A$ be an algorithm.\\
+$A$ is an \textit{$\alpha$-Approximation Algorithm} for a problem, $P$, if
+\begin{enumerate}
+	\item $A$ runs in \textit{Polynomial-Time}.
+	\item $A$ always outputs a solution with a value, $s$, within an $\alpha$ factor of the \textit{Optimal} solution.
+\end{enumerate}
+The measure depends on the type of problem $P$ is
+\begin{itemize}
+	\item If $P$ is a \textit{Maximisation Problem}, then $\dfrac{\text{Optimal}}\alpha\leq s\leq\text{Optimal}$.
+	\item If $P$ is a \textit{Minimisation Problem}, then $\text{Optimal}\leq s\leq\alpha\cdot\text{Optimal}$.
+\end{itemize}
+
+\subsection{Constance Factor Approximations}
+
+\definition{Constant Factor Approximation Algorithm}
+A \textit{Constant Factor Approximation Algorithm} is an \textit{Approximation Algorithm} where the approximation value, $\alpha$, has a constant value, independent of the input.
+
+\remark{Below are some examples of Constant Factor Approximations}
+
+\subsubsection{Bin Packing Problem}
+
+\definition{BinPacking Problem}
+Consider an infinite number of bins of size $1$ \& a set of items with size $\in[0,1]$.\\
+The \textit{BinPacking Problem} is to find the fewest number of bins required to store this set of items.\\
+This is \textit{NP-Hard}.\\
+The \textit{Decision} version of this problem is ``\textit{can you pack the items into $k$ bins?}".\\
+The \textit{Decision} version is \textit{NP-Complete}.\\
+
+\proposition{Solution 1 - First Fit}
+We can approximate the \textit{BinPacking Problem} as
+\begin{center}
+\textbf{If} item $i$ fits into bin $j$: pack it; next item;\\
+\textbf{else}: start new bin.
+\end{center}
+Let $I$ be the sum of the weights of the items, $fill(i)$ be the sum of the item sizes in bin $i$ \& $s$ be the number of bins used.\\
+Using the technique above we observe that $fill(2i-1)+fill(2i)>1\ \forall\ 2i\in[1,s]$.
+\[\begin{array}{rl}
+\implies&\left\lfloor\frac{s}2\right\rfloor<\sum_{2i\in[1,s]}fill(2i-1)+fill(2i)\leq I<\mathtt{Opt}\\
+\implies&s\leq2\cdot\mathtt{Opt}
+\end{array}\]
+Thus, we know that this solution uses no more that twice the optimal number of bins.\\
+This is a \textit{$2$-Approximation Algorithm} of the \textit{BinPacking Problem}.\\
+\nb This runs in $O(n)$ time.\\
+
+\proposition{Solution 2 - First Fit Decreasing}
+Consider sorting the items in \textit{Non-Decreasing} order, then fit each item into the left-most bin it will fit in.\\
+This runs in $O(n^2)$ time and uses $s$ bins.\\
+Consider bin $j=\lceil\frac{2s}3\rceil$
+\begin{itemize}
+	\item[Case 1] Suppose bin $j$ contains an item of size $>\frac12$.\\
+	Then each bin $j'\leq j$ contains at item of size $>\frac12$.\\
+	Thus at least $j=\lceil\frac{2s}3\rceil$ bins are required.\\
+	Thus, $s\leq\frac32\cdot\mathtt{Opt}$.
+	\item[Case 2] Suppose bin $j$ only contains times of size $\leq\frac12$.\\
+	When the first item was packed into $j$ all bins $j'\in(j,s]$ were empty and all unpacked items had size $\leq\frac12$.\\
+	Thus each bin $j'\in(j,s)$ contains at least 2 items and bin $s$ contains at least one item.\\
+	This means at least $2(s-j)+1$ items don't fit into bins $j'\in[1,j)$.\\
+	Thus $\sum$item weights$>\min\{j-1,2(s-j)+1\}\geq\lceil\frac{2s}3\rceil-1$.\\
+	Since $\sum$item weights$\leq\mathtt{Opt}\implies\lceil\frac{2s}3\rceil-1\leq\mathtt{Opt}$.\\
+	Thus, $s\leq\frac{3}{2}\mathtt{Opt}$.
+\end{itemize}
+Thus, in both cases, this solution is a \textit{$\frac32$-Approximation Algorithm}.
+
+\subsubsection{Job Scheduling on Parallel Machines}
+
+\proposition{Scheduling Jobs on Parallel Machines Problem}
+Consider having $m$ identical machines \& $n$ jobs which vary in time taken.\\
+Our goal is to minimise the time taken to process all the jobs.\\
+\nb This problem is \textit{NP-Hard}.\\
+
+\remark{Assessing Success}
+Let $J$ be the set of all jobs \& $J_i$ be the set of jobs assigned to machine $i$.\\
+Define $L_i:=\sum_{j\in J_i}t_j$ to be the time for machine $i$ to execute all its jobs.\\
+Thus the total time to execute all jobs in $J$ is $\sup L_i$.\\
+Thus we want to minimise $\sup L_i$.\\
+
+\proposition{Solution 1 - Greedy Algorithm}
+Let $J$ be the set of all jobs, with $n:=|J|$ and there be $m$ identical machines.
+\begin{center}
+Assign job $j$ to the machine $i$ with the current smallest load.
+\end{center}
+Naively this takes $O(nm)$ time to produce a schedule, but can be done in $O(n\log m)$ time using a \textit{Priority Queue}.\\
+\nb This is an \textit{Online Algorithm}.\\
+
+\proposition{Solution 1 - Approximation Value}
+Let $\mathtt{Opt}$ denote the time taken by the optimal schedul \& $T$ denote the time taken by the greedy schedule produced by \textbf{Proposition 8.4}.\\
+Note that $\mathtt{Opt}\geq\sup t_j$ where $t_j$ is the time taken by job $j$.\\
+And, $\mathtt{Opt}\geq\frac1m\sum_jt_j$ since at least one machine will have a load $L_i\geq\frac1m\sum_jt_j$.\\
+Consider the machine $i$ with the greatest load (\ie $L_i\equiv T$).\\
+Let $j$ be the last job assigned to $i$.\\
+We know that when $j$ was assigned to $i$, $i$ had the lighestest load (\ie $L_i-t_j\leq L_k\ \forall\ k\in[1,m]$).\\
+Summing every machine we get
+\[\begin{array}{rcl}
+m(L_i-t_j)&\leq&\displaystyle\sum_{k=1}^mL_k\\
+\implies L_i-t_j&\leq&\dfrac1m\displaystyle\sum_{k=1}^mL_k\\
+&\leq&\mathtt{Opt}\text{ by second fact}
+\end{array}\]
+Since $t_j\leq\mathtt{Opt}$ we have
+\[\begin{array}{rcl}
+T&=&L_i\\
+&=&L_i-t_j+t_j\\
+&\leq&\mathtt{Opt}+\mathtt{Opt}\\
+&=&2\ \mathtt{Opt}\\
+\implies T&\leq&2\ \mathtt{Opt}
+\end{array}\]
+Thus \textbf{Proposition 8.4} is a $2$-Approximation.\\
+
+\proposition{Solution 2 - Longest Processing Time}
+Let $J$ be the set of all jobs, with $n:=|J|$, let $t_j$ be the time to execute job $j$ and let there be $m$ identical machines.
+\begin{center}
+Sort jobs in non-increasing order.\\
+Put job $j$ into machine $i$ with the smallest current load.
+\end{center}
+This takes $O(n\log n)$ time to produce a schedule.\\
+
+\proposition{Solution 2 - Approximation Value}
+Let $J$ be the set of all jobs, with $n:=|J|$, let $t_j$ be the time to execute job $j$ and let there be $m$ identical machines.
+Let $\mathtt{Opt}$ denote the time taken by the optimal schedul \& $T$ denote the time taken by the  schedule produced by \textbf{Proposition 8.6}.\\
+Note that if $n\leq m$ then \textbf{Proposition 8.6} is optimal.\\
+Else (if $n>m$):\\
+At least one of the machines is assigned two jobs (each taking at least $t_{m+1}$ time).\\
+Thus $\mathtt{Opt}\geq 2t_{m+1}$.\\
+\\
+Let $i$ be the machine with the greatest load. (\ie $T\equiv L_i$).\\
+Let $j$ be the last job assigned to $i$. We have $L_i-t_j\leq\mathtt{Opt}$.\\
+Assume $n>m$ and that $i$ has assigned at least two jobs. Then $L_i-t_j>0$.\\
+We have that $t_j\leq t_{m+1}\leq\frac12\mathtt{Opt}$ (\ie the time for last job is no more than the $(m+1)^\text{th}$ job's) by previous fact.\\
+Therefore
+\[\begin{array}{rcl}
+T&=&L-i\\
+&=&L_i-t_j+t_j\\
+&\leq&\mathtt{Opt}+\frac12\mathtt{Opt}\\
+&=&\frac32\mathtt{Opt}\\
+\implies T&\leq&\frac32\mathtt{Opt}
+\end{array}\]
+Thus \textbf{Proposition 8.6} is a $\frac32$-Approximation.
+
+\subsubsection{$k$-Centres}
+
+\proposition{$k$-Centres Problem}
+Consider $n$ points in a 2D space.\\
+We want to insert $k$ centres into the space st the maximum distance from any point to the closest centre is minimised.\\
+\nb Distance is measured as the \textit{Euclidean Distance} $\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}$.\\
+
+\proposition{Solution 1 - Greedy Algorithm}
+Let $\{x_1,\dots,x_p\}$ be some points in 2D space.\\
+Here is a \textit{Greedy Algorithm} which offers a solution to \textbf{Proposition 8.8}
+\begin{enumerate}
+	\item Pick any point to be a centre.
+	\item Pick the point which has the greatest distance to its nearest centre to be a new centre.
+	\item Repeat ii) until $k$ centres have been picked.
+\end{enumerate}
+This takes $O(nk)$ time.\\
+
+\proposition{Solution 1 - Approximation Factor}
+Let $C$ be the set of centres produced by \textbf{Proposition 8.9} \& $C_\mathtt{Opt}$ be the optimal set of centres.\\
+Let $r$ be the greatest distance of a point from its nearest centre in $C$\\
+and $r_\mathtt{Opt}$ be the greatest distance of a point from its nearest centre in $C_\mathtt{Opt}$.
+\begin{itemize}
+	\item[Case 1]\textit{No $c_i,c_{i'}\in C$ which have the same closest centre ,$c_j$, in $C_\mathtt{Opt}$}.\\
+	Then all points must be within $r_\mathtt{Opt}$ of a centre in $C_\mathtt{Opt}$.\\
+	Thus all points are at most $2r_\mathtt{Opt}$ from a centre in $C$. (opposite side of circle radius $r_\mathtt{Opt}$)\\
+	\item[Case 2]\textit{$\exists\ c_i,c_{i'}\in C$ which have the same closest centre ,$c_j$, in $C_\mathtt{Opt}$}.\\
+	Thus $s_i$ is at most $2r_\mathtt{Opt}$ from $s_{i'}$. (opposite side of circle radius $r_\mathtt{Opt}$)\\
+	Assume that $c_i$ was made a centre after $c_{i'}$, WLOG.\\
+	Thus $c_i$ was the furthest from any exisiting centre in $C$ when it was added.\\
+	Thus before adding $s_i$ all centres in $C$ were at most $2r_\mathtt{Opt}$ from another centre in $C$.\\
+	Thus $r\leq r_\mathtt{Opt}$.
+\end{itemize}
+Thus \textbf{Proposition 8.9} is 1 $2$-Approximation
+
+\subsection{Fully Polynomial Time Approximation Schemes}
+
+\definition{Pseudo-Polynomial Time Algorithm}
+An algorithm is \textit{Pseudo-Polynomial Time Algorithm} if it runs in \textit{Polynomial Time} when all the numbers are integers $\leq n^c$ for some constant $c$.\\
+
+\definition{Polynomial Time Approximation Scheme}
+A \textit{Polynomial Time Approximation Scheme}, PTAS, for a problem $P$ is a family of algorithms, $A$, st $\forall\ \varepsilon>0$ there is an algorithm $A_\varepsilon\in A$ st $A_\varepsilon$ is a $(1+\varepsilon)$-Approximation algorithm for $P$.\\
+\nb A \textit{PTAS} does not have to have a time complexity which is polynomial in $1/\varepsilon$.\\
+
+\definition{Fully Polynomial Time Approximation Scheme}
+A \textit{PTAS} is called a \textit{Fully PTAS}, FPTAS, if it has a time complexity which is polynomial in $1/\varepsilon$ (as well as in $n$).
+
+\subsubsection{Subset Sum}
+
+\definition{Subset Sum Problem}
+Let $S$ be a set of positive intergers \& $t\in\nats$ be a target value.\\
+The \textit{Decision Problem} of the \textit{Subset Sum Problem} is to find if there is a subset, $S'\subseteq S$, st $\sum_{s\in S'}=t$.\\
+The \textit{Optimisation Problem} of the \textit{Subset Sum Problem} is to find the size of the \underline{largest} subset, $S'\subset S$, st $\sum_{s\in S'}\leq t$. (Note the inequality).\\
+\nb The \textit{Decision Problem} is \textit{NP-Hard} and the \textit{Optimisation Problem} is \textit{NP-Complete}.\\
+
+\proposition{Solution 1 - Exact Solution for Decision Problem}
+Let $S$ be a set of $m$ positive intergers \& define $S_i:=S[1,i]$ and $t\in\nats$ be a target value.\\
+Let $L_i$ be the set of all total sum values of $S'\subseteq S_i$ which are \underline{no larger} than $t$.\\
+Note that the largest subset of $S$ with total-sum value $\leq t$ is the largest number in $L_m$.\\
+We can compute $L_i$ from $L_{i-1}$ as
+$$L_i=L_{i-1}\cup\{x\in L_{i-1}:x+S[i]\leq t\}$$
+There are no duplicates in $L_i$ so $|L_i|\leq t$.\\
+We can now use the following algorithm
+\begin{enumerate}
+	\item Let $L_0=\{0\}$.
+	\item For $i\in[1,m]$:
+	\begin{itemize}
+		\item[-] Define $L_i=L_{i-1}\cup\{x\in L_{i-1}:x+S[i]\leq t\}$.
+	\end{itemize}
+	\item Return $\sup L_m$.
+\end{enumerate}
+The overall time-complexity is $O(mt)=O(n^{c+1})$.\\
+Thus this a \textit{Pseudo-Polynomial Time} algorithm.\\
+
+\proposition{Solution 2 - PTAS}
+Let $S$ be a set of $m$ positive intergers \& define $S_i:=S[1,i]$ and $t\in\nats$ be a target value.\\
+Let $L_i$ be the set of all total sum values of $S'\subseteq S_i$ which are \underline{no larger} than $t$.\\
+We want to construct a \textit{trimmed} version of $L_i$, $L_i'$, which is a subset of $L_i$ and whose length is polynomial in the input length (\ie $|L_i'|\leq n^c$ for some $c$).\\
+We condition that $\forall\ y\in L_i\ \exists z\in L_i'$ which is almost as big as $y$.\\
+We define the process $\mathtt{Trim}(\cdot,\cdot)$.
+\begin{center}
+$\mathtt{Trim}(L_i,\delta)$: $L_i[j]\in L_i'$ iff $L_i[j]>(1+delta)\cdot\mathtt{prev}$
+\end{center}
+where $\mathtt{prev}$ is the previous value we included in $L_i'$.\\
+Now we have an algorithm
+\begin{enumerate}
+	\item Let $L_0'=\{0\}$ and $d=\frac1{2m}\varepsilon$.
+	\item For $i\in[1,m]$:
+	\begin{itemize}
+		\item[-] Compute $U=L_{i-1}'\cup\{x\in L_{i-1}':x+S[i]\leq t\}$.
+		\item[-] Define $L_i':=\mathtt{Trim}(U,\delta)$.
+	\end{itemize}
+	\item Return $\sup L_m'$.
+\end{enumerate}
+This algorithm does throw away possible subsets but will always output a \underline{valid} subset (but it may not be the largest).\\
+
+\theorem{}
+Consider the setup in \textbf{Proposition 8.12}.
+\begin{center}
+$\forall\ y\in L_i,\ \exists\ z\in L_i'$ st $\dfrac{y}{(1+\delta)^i}\leq z\leq y$.
+\end{center}
+
+\proof{Theorem 8.1}
+\textit{Proof by induction}.\\
+\underline{Base Case} - $L_0=L_0'=\{0\}$.\\
+\underline{Inductive Case}: Assume \textbf{Theorem 8.1} holds for $i-1$.\\
+As $y\in L_i$ we have that either $y\in L_{i-1}$ or $(y-S[i])\in L_{i-1}$:
+\begin{itemize}
+	\item[($y\in L_{i-1}$)] then $\exists\ x\in L_{i-1}'$ st $\dfrac{y}{(1+\delta)^{i-1}}\leq x\leq y$ by the \textit{Inductive Hypothesis}.\\
+	By the definition of $\mathtt{Trim}\ \exists\ z\in L_i'$ st $z\leq x\leq z\cdot(1+\delta)$.\\
+	$\implies z\leq x\leq y$ and $\dfrac{y}{(1+\delta^i)}\leq\dfrac{x}{1+\delta}\leq z$.\\
+	\ie $\exists\ z\in L_i'$ st $\dfrac{y}{(1+\delta)^i}\leq z\leq y$, as required.
+	\item[($y-S{[i]}\in L_{i-1}$)] Very similar to above.
+\end{itemize}
+
+\proposition{Solution 2 - Is a PTAS}
+Using \textbf{Theorem 8.1} with $i:=m$ and $\delta:=\frac{1}{2m}\varepsilon$ we have that
+\begin{center}
+$\forall\ y\in L_m,\ \exists\ z\in L_m'$ st $\dfrac{y}{(1+\frac\varepsilon{2m})^m}\leq z\leq y$.
+\end{center}
+We have that $\mathtt{Opt}\in L_m$ so $\exists\ z\in L_m'$ st $\dfrac{\mathtt{Opt}}{(1+\frac\varepsilon{2m})^m}\leq z\leq\mathtt{Opt}$
+For \textbf{Proposition 8.12} to be a PTAS we need to show that $(1+\frac\varepsilon{2m})^m\leq1+\varepsilon$ for $\varepsilon\in(0,1]$.
+\[\begin{array}{rcl}
+\left(1+\dfrac\varepsilon{2m}\right)^m&\leq&e^{\varepsilon/2}\\
+&\leq&1+\dfrac\varepsilon2+\left(\dfrac\varepsilon2\right)^2\text{ since }e^x:=\sum_{i=0}^\infty\dfrac{x^i}{i!}\\
+&\leq&1+\varepsilon
+\end{array}\]
+Thus the output of \textbf{Proposition 8.12} is some $z$ with
+\[\begin{array}{rl}
+&\dfrac{\mathtt{Opt}}{1+\varepsilon}\leq\dfrac{\mathtt{Opt}}{(1+\frac\varepsilon{2m})^m}\leq z\leq\mathtt{Opt}\\
+\implies&\dfrac{\mathtt{Opt}}{1+\varepsilon}\leq z\leq\mathtt{Opt}
+\end{array}\]
+Thus \textbf{Proposition 8.12} is a valid PTAS.\\
+
+\proposition{Solution 2 - Run-Time}
+Assessing the run-time of \textbf{Proposition 8.12} amounts to assessing the size of $L_i'$.\\
+By the definition of $\mathtt{Trim}$ we have that for any successive elements $z,z'\in L_i'$
+$$\dfrac{z'}z\geq1+\delta=1+\frac\varepsilon{2m}$$
+Further, $\forall\ z\in L_i',\ z\leq t$.
+Thus, $L_i'$ contains at most $O(\log_{1+\delta}t)$ elements.\\
+We have
+\[\begin{array}{rcl}
+|L_i'|&=&\log_{1+\delta}t\\
+&=&\dfrac{ln t}{\ln(1+\frac\varepsilon{2m}}\\
+&\leq&\dfrac{2m(1+\frac\varepsilon{2m})\ln t}{\varepsilon}\text{ since }\ln(1+x)>\frac{x}{x+1}\\
+&=&O\left(\dfrac{m\log t}\varepsilon\right)
+\end{array}\]
+Thus the algorithm runs in
+$$O(m|L_i'|)=O\left(m^2\frac{\log t}\varepsilon\right)=O\left(n^3\frac{\log n}\varepsilon\right)$$
+
+\subsection{Asymptotic Polynomial Time Approximation Schemes}
+
+\definition{Asymptotic Polynomial Time Approximation Schemes}
+An \textit{Asymptotic Polynomial Time Approximation Schemes}, APTAS, for a problem $P$ is a family of algorithms $A$ where
+\begin{center}
+$\exists c>0$ st $\forall\ \varepsilon>0,\ A_\varepsilon\in A$ runs in polynomial-time and ouputs a solution $s$ with
+\begin{itemize}
+	\item[-] $\mathtt{Opt}\leq s\leq(1+\varepsilon)\mathtt{Opt}+c$ for minimisation problems.
+	\item[-] $\dfrac{\mathtt{Opt}}{(1+\varepsilon)}\leq s\leq\mathtt{Opt}+c$ for maximisation problems.
+\end{itemize}
+\end{center}
+Note that an APTAS does not have to runs polynomial in $\frac1\varepsilon$.\\
+
+\definition{Fully Asymptotic Polynomial Time Approximation Schemes}
+A \textit{Fully Asymptotic Polynomial Time Approximation Schemes}, AFPTAS, is an FPTAS which runs polynomially in $\frac{1}\varepsilon$
+
+\subsubsection{Partition}
+
+\definition{Partition Problem}
+Let $S$ be a set of positive integers \& $t\in\nats$ be a target value.\\
+The \textit{Partition Problem} is a special case of the \textit{Subset Sum Problem} where $t:=\frac{1}{2}\sum_{s\in S}s$.\\
+Thus the \textit{Decision Problem} is whether there is a subset $S'\subseteq S$ st $\sum_{s'\in S'}s'=\frac{1}{2}\sum_{s\in S}s$.\\
+Equivalently, can we pack $S$ into two bins of size $\frac12\sum_{s\in S}s$.\\
+\nb This problem is \textit{NP-Complete}.\\
+
+\proposition{Approximating Partition problem as BinPacking}
+Here is a solution to the \textit{Partition Problem} by approximating the \textit{BinPacking Problem}.\\
+We covert the \textit{Partition Problem} into a \textit{BinPacking Problem} by dividing all items \& bin sizes by $t$.\\
+Now all bins have size $1$ and items $in(0,1]$.\\
+If the optimal number of bins, $\mathtt{Opt}$, is 2 then the answer to the \textit{Partition Decision Problem} is $\mathtt{true}$.\\
+
+\proposition{Solution 1 - Bin Packing}
+Suppose we have $n$ items which take one of $c$ different sizes \& at most $d$ items fit in each bin, for some constants $c,d$.\\
+We can describe any packing of items into a single bin by its type (the type determines num items in bin).\\
+There are $i\in[0,c]$ items of any size \& $d$ different sizes. Thus
+$$\text{\# types}\leq(c+1)^d$$
+Ignoring rearrangements of bins we have $j\in[0,n]$ bins of each type. Thus
+$$\text{\# packings}\leq(n+1)^{(c+1)^d}$$
+However, not all of these are valid.\\
+We can check each of the different packings to check if they are valid \& return the one with the fewest bins.\\
+This takes $O(n\cdot(n+1)^{(c+1)^d})$ time \& exactly solves the \textit{BinPacking Problem}.\\
+
+\proposition{APTAS for BinPacking}
+Suppose we have $n$ items which take one of $c$ different sizes \& at most $d$ items fit in each bin, for some constants $c,d$.
+\begin{enumerate}
+	\item Remove all small items ($\leq\frac\varepsilon2$) so only $c=\frac2\varepsilon$ of the remaining large ($>\frac\varepsilon2$) items will fit into a single bin.
+	\item Divide the items into $k=\left\lfloor n\frac{\varepsilon^2}2\right\rfloor$ a constant number of groups.\\
+	The sizes of items in each group are then rounded up to match the size of the largest member (and the largest group is removed).\\
+	This will leave only $d=\frac4{\varepsilon^2}$ different item sizes.
+	\item Use the polynomial time algorithm to optimally pack the remaining special case.\\
+	\nb This takes $O\left(n(n+1)^{(\frac4{\varepsilon^2}+1)^{2/\varepsilon}}\right)$ time.
+	\item Reverse the grouping from ii) and greedily pack all the small items remvoed in i)
+\end{enumerate}
+
+\proposition{Packing Large Items}
+Each large item is $>\frac\varepsilon2$ so at most $\frac2\varepsilon$ bins are required.\\
+
+\proposition{ii) - Reducing the number of items sizes} %TODO redo this
+Given a set of items, order then in non-increasing order \& split them into continuous groups of $k$ items (the last group may have less items).\\
+Define $S'$ to be the set of these items but each item is rounded to the maximum size in its group \underline{and} does not include the largest group.\\
+This means $S'$ contains $\frac{n}k$ distinct items.\\
+By the way we define $k$, it is big enough st $\frac{n}k\leq\frac4{\varepsilon^2}$ (a constant).\\
+Note that $\mathtt{Opt}_{S'}\leq \mathtt{Opt}_S\leq \mathtt{Opt}_{S'}+k$ by \textbf{Proof 8.2}.\\
+\\
+Setting $k:=\lfloor n(\frac{\varepsilon^2}2)\rfloor$ and $S$ to be the set of `large items'.\\
+Then $k\leq\varepsilon\cdot\mathtt{Opt}_S$ since each of the $n$ items in $S$ is $\geq\frac\varepsilon2$.\\
+$\implies\mathtt{Opt}_{S'}+k\leq(1+\varepsilon)\mathtt{Opt}_S$.\\
+$\implies\mathtt{Opt}_S\leq\mathtt{Opt}_{S'}\leq(1+\varepsilon)\mathtt{Opt}_S$.\\
+
+\prooff{$\mathtt{Opt}_{S'}\leq \mathtt{Opt}_S\leq \mathtt{Opt}_{S'}+k$}
+\begin{itemize}
+	\item[-] If $S$ can be packed into $b$ bins, then $S'$ can be packed into $b$ bins.\\
+	Each item from $S$ is replaced by an item from the next group down. This item is no larger than it.\\
+	Since $S'$ does not have the largest group of $S$, the elements in the smallest group of $S$ are discarded.
+	So the packing is valid \& $\mathtt{Opt}_{S'}\leq\mathtt{Opt}_S$.
+	\item[-] If $S'$ can be packed into $b$ bins, then $S$ can be packed into $b+k$ bins.\\
+	This is because we can replace each item in $S'$ with a smaller item from $S$.\\
+	This leaves the largest group in $S$ to be added, this group is of size $k$ thus at most $k$ bins are required.\\
+	$\mathtt{Opt}_S\leq\mathtt{Opt}_{S'}+k$.
+\end{itemize}
+\nb Each of these transformations takes polynomial time.\\
+
+\theorem{iv)}
+Let $\varepsilon\in[0,1]$ and suppose we are given a packing of the items $s\in S$ with $s>\frac\varepsilon2$ (large items) into $b$ bins.\\
+Then, we can pack all items in $S$ into either $b$ or $(1+\varepsilon)\mathtt{Opt}+1$ bins (in polynomial time).\\
+This is done by placing small items anywhere but not starting an extra bin unless we have to.\\
+$(1+\varepsilon)\mathtt{Opt}+1$ bins are required iff all the bins in the given packing (except possibly the last) is $1-\frac\varepsilon2$ full.
+
 \newpage
 \setcounter{section}{-1}
 \section{Reference}
@@ -913,7 +1524,20 @@ Thus the \textit{DC3 Method} has run-time equation $T(n)=T\left(\frac{2}{3}n\rig
 
 \definition{Amortised Expected}
 \textit{Amortised Expected} is a term for the complexity of something. It describes the total complexity to execute a sequence of instructions, divided by the number of instructions.\\
-\eg If $n$ instructions take $O(n)$ time to execute completley, then the \textit{amortised expected} time is $O(1)$.
+\eg If $n$ instructions take $O(n)$ time to execute completley, then the \textit{amortised expected} time is $O(1)$.\\
+
+\definition{Decision Problem}
+A \textit{Decision Problem} is a problem which is answered using either \textit{yes} or \textit{no}, only.\\
+
+\definition{Greedy Algorithm}
+A \textit{Greedy Algorithm} is an algorithm which makes locally optimal choices at each stage, with the intent of finding a global optimum.\\
+
+\definition{Online Algorithm}
+An \textit{Online Algorithm} is an algorithm which can process its input in the order it is fed into the algorithm without having the entire input available at the start.\\
+This means you can keep passing more information to the algorithm.\\
+
+\definition{Offline Algorithm}
+An \textit{Offline Algorithm} requires the whole input before it beings processing. This algorithm then needs to totally rerun if you want to increase the input size.
 
 \subsection{Probability}
 
@@ -987,5 +1611,31 @@ Then
 &=&\displaystyle\sum_{i=1}^n\prob(A_i1)
 \end{array}\]
 \proved
+
+\subsection{NP-Completeness}
+
+\definition{NP}
+\textit{NP} is the set of \textit{Decision Problems} which we can \underline{validate} the answer of in polynomial time.\\
+
+\definition{NP-Hard}
+Let $A$ be a decision problem.\\
+$A$ is \textit{NP-Hard} if $\forall\ B\in NP$, $B$ can be reduced to $A$ in polynomial time.\\
+\nb This means we can solve $B$ using $A$.\\
+
+\definition{NP-Complete}
+Let $A$ be a decision problem.\\
+$A$ is \textit{NP-Complete} if
+\begin{itemize}
+	\item[-] $A$ is in \textit{NP}.
+	\item[-] $A$ is \textit{NP-Hard}.
+\end{itemize}
+
+\remark{If we can solve an NP-Complete problem we can solve all NP problems}
+
+\definition{Weakly NP-Complete}
+We say an \textit{NP-Complete} problem is \textit{Weakly NP-Complete} if there is a \textit{Pseudo-Polynomial Time} algorithm for it.\\
+
+\definition{Strongly NP-Complete}
+We say an \textit{NP-Complete} problem is \textit{Strongly NP-Complete} if it is still \textit{NP-Complete} when all numbers are integers $\leq n^c$ for some constant $c$.
 
 \end{document}

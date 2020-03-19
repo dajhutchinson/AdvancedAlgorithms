@@ -1,0 +1,114 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in, paperwidth=8.3in, paperheight=11.7in]{geometry}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{changepage} 
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    frameround=fttt,
+    language=Prolog,
+    numbers=left,
+    breaklines=true,
+    keywordstyle=\color{blue}\bfseries, 
+    basicstyle=\ttfamily\color{red},
+    numberstyle=\color{black}
+    }
+
+\begin{document}
+
+\pagestyle{fancy}
+\setlength\parindent{0pt}
+\allowdisplaybreaks
+
+\renewcommand{\headrulewidth}{0pt}
+\hyphenpenalty 10000
+\exhyphenpenalty 10000
+
+% Cover page title
+\title{Advanced Algorithms - Problem Sheet 2}
+\author{Dom Hutchinson}
+\maketitle
+
+% Header
+\fancyhead[L]{Dom Hutchinson}
+\fancyhead[C]{Advanced Algorithms - Problem Sheet 2}
+\fancyhead[R]{\today}
+
+% Counters
+\newcounter{qpart}[section]
+
+% commands
+\newcommand{\dotprod}[0]{\boldsymbol{\cdot}}
+\newcommand{\cosech}[0]{\mathrm{cosech}\ }
+\newcommand{\cosec}[0]{\mathrm{cosec}\ }
+\newcommand{\sech}[0]{\mathrm{sech}\ }
+\newcommand{\prob}[0]{\mathbb{P}}
+\newcommand{\nats}[0]{\mathbb{N}}
+\newcommand{\cov}[0]{\mathrm{cov}}
+\newcommand{\var}[0]{\mathrm{var}}
+\newcommand{\expect}[0]{\mathbb{E}}
+\newcommand{\reals}[0]{\mathbb{R}}
+\newcommand{\integers}[0]{\mathbb{Z}}
+\newcommand{\indicator}[0]{\mathds{1}}
+\newcommand{\nb}[0]{\textit{N.B.} }
+\newcommand{\ie}[0]{\textit{i.e.} }
+\newcommand{\eg}[0]{\textit{e.g.} }
+\newcommand{\iid}[0]{\overset{\text{iid}}{\sim} }
+\newcommand{\x}[0]{\textbf{x} }
+\newcommand{\X}[0]{\textbf{X} }
+\newcommand{\Mod}[0]{\text{ mod }}
+\newcommand{\proved}[0]{$\hfill\square$}
+
+\newcommand{\qpart}[0]{\stepcounter{qpart} \textbf{Question \arabic{section} \alph{qpart})\\}}
+\newcommand{\qpartnb}[0]{\stepcounter{qpart} \textbf{Question \arabic{section} \alph{qpart})} - }
+\newcommand{\ans}[0]{ \textbf{Answer \arabic{section}\\}}
+\newcommand{\ansnb}[0]{ \textbf{Answer \arabic{section}}}
+\newcommand{\apart}[0]{ \textbf{Answer \arabic{section} \alph{qpart})\\}}
+\newcommand{\apartnb}[0]{\textbf{Answer \arabic{section} \alph{qpart})}}
+\newcommand{\question}[0]{\stepcounter{section}\section*{Question - \arabic{section}.}}
+
+\question
+The dynamic predecessor problem can be defined to be the dynamic dictionary problem with the addition of the $\mathtt{PREDECESSOR}$ operation. Recall that gien a set of integers, $Y$, the $\mathtt{PREDECESSOR}$ of $x$ (which may not be in $Y$) is the largest $v\in Y$ such that $v\leq x$. The dynamic predecessor problem could be solved by either a self-balancing search tree (such as an AVL or Red-Black Tree) or a van Emde Boas tree.\\
+
+\qpartnb Give one advantage of using a van Emde Boas Tree Over a self-balancing search tree.\\
+
+\apartnb Do not need to reshape the tree each time an insertion or deletion occurs.\\
+
+\qpartnb Give on advantage of fusing a self-balancing search tree over a van Emde Boas Tree.\\
+
+\apartnb Run time for operations depends on the size of set being stored, not on the size of the universe the set is taken from. Thus, if the set is much smaller than the universe then a self-balancing tree should be quicker.
+
+\question
+How can you perform $\mathtt{DELETE}$ in a van Emde Boas tree?\\
+What is the relevant recurrence relation for the time complexity of $\mathtt{DELETE}$ and what is its solution in terms of big $O$ complexity?\\
+
+\ansnb
+$\mathtt{DELETE}(x)$
+\begin{enumerate}
+	\item Determine which $B[i]$ the element $x$ belongs in.
+	\item If $B[i]$ is empty then stop.
+	\item Else If $B[i]$ is root set $B[i][x]=0$ (adjusted for offset)
+	\item Else delete $x$ from $B[i]$ adjusted for offset.
+	\item If $B[i]$ is empty set $C[i]=0$.
+\end{enumerate}
+$O(\log\log u+\sqrt{u})?????$\\
+
+\question
+Consider a version of van Emde Boas trees where the new minimum is always recursively inserted into the tree instead of being stored at only one level. Write down the recurrence relation for the time complexity of the $\mathtt{ADD}$ operation and give its solution in big $O$ notation.\\
+
+\ans
+
+\end{document}
